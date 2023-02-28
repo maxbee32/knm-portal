@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('numberOfChildren')->default(0);
             $table->integer('numberOfAdult')->default(0);
             $table->string('country');
-            $table->city('city');
+            $table->string('city');
             $table->string('gender');
             $table->string('status');
             $table->timestamps();
