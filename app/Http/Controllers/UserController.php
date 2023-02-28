@@ -43,8 +43,8 @@ public function __construct(){
 
 public function userLogin(Request $request){
     $validator = Validator::make($request->all(), [
-        'email'=> 'required|email:rfc,filter,dns',
-        'password' => 'required|string|min:6',
+        'email'=>'required|email:rfc,filter,dns',
+        'password' =>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed',
     ]);
 
     if($validator->fails()){
@@ -74,30 +74,21 @@ public function userLogin(Request $request){
 public function userSignUp(Request $request){
     $validator = Validator::make($request-> all(),[
         'email' => 'required|string|email:rfc,filter,dns|unique:users',
-        'password'=> 'required|string|min:6|confirmed'
-
+        // 'password'=> 'required|string|min:6|confirmed',
+        'password'=>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed'
     ]);
 
-    if($validator-> fails()){
-
+     if($validator-> fails()){
         return $this->sendError($validator->errors(), 'Validation Error', 422);
     }
-
     $user_status  = User::where("email", $request->email)->first();
-
         if(!is_null($user_status)){
             return $this->sendError([], "Whoops! email already registered", 400);
         }
-
         $user = User::create(array_merge(
                 $validator-> validated(),
                 ['password'=>bcrypt($request->password)]
-
-
-
             ));
-
-
         if ($user ){
             $verify2 = DB::table('password_resets')->where([
                 ['email',$request->all()['email']]
@@ -322,8 +313,8 @@ public function verifyPin(Request $request)
 public function resetPassword(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'email' => ['required', 'string', 'email', 'max:255'],
-        'password' => ['required', 'string', 'min:6', 'confirmed'],
+        'email' => 'required'|'string'|'email',
+        'password' => 'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed',
     ]);
 
     if ($validator->fails()) {
@@ -348,46 +339,46 @@ public function resetPassword(Request $request)
 }
 
 
-  //store booking
-  public function storeReservation(Request $request){
-    $validator= Validator::make($request-> all(),[
-        'image' => 'nullable|dimensions:max_width=500,max_heigt=500|size=5000',
-        'firstname'=> 'required|string',
-        'lastname'=> 'required|string',
-        'gender'=> 'required|in:Male,Female',
-        'country'=> 'required|string',
-        'region'=> 'required|string',
-        'city'=> 'required|string',
-        'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
-        'reservation_date'=> 'required|dateTime',
-        'no_of_ticket'=>'required|numeric'
+//   //store booking
+//   public function storeReservation(Request $request){
+//     $validator= Validator::make($request-> all(),[
+//         'image' => 'nullable|dimensions:max_width=500,max_heigt=500|size=5000',
+//         'firstname'=> 'required|string',
+//         'lastname'=> 'required|string',
+//         'gender'=> 'required|in:Male,Female',
+//         'country'=> 'required|string',
+//         'region'=> 'required|string',
+//         'city'=> 'required|string',
+//         'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
+//         'reservation_date'=> 'required|dateTime',
+//         'no_of_ticket'=>'required|numeric'
 
-    ]);
+//     ]);
 
-    if($validator-> fails()){
+//     if($validator-> fails()){
 
-        return $this->sendError($validator->errors(), 'Validation Error', 422);
-    }
+//         return $this->sendError($validator->errors(), 'Validation Error', 422);
+//     }
 
-    if(Carbon::now()> $request->reservation_date){
-        return $this->sendError([
-            'success'=> false, 'message' => "Date in the past is not allowed. Kindly select a current date"
-        ], 400);
-    }
+//     if(Carbon::now()> $request->reservation_date){
+//         return $this->sendError([
+//             'success'=> false, 'message' => "Date in the past is not allowed. Kindly select a current date"
+//         ], 400);
+//     }
 
-       Booking::create(array_merge(
-        ['user_id' => optional(auth()->user())->id],
-        $validator-> validated()
-    ));
+//        Booking::create(array_merge(
+//         ['user_id' => optional(auth()->user())->id],
+//         $validator-> validated()
+//     ));
 
-    return $this->sendResponse(
-        ['success'=>'true',
-        'message'=>'Reservation completed successfully.'
+//     return $this->sendResponse(
+//         ['success'=>'true',
+//         'message'=>'Reservation completed successfully.'
 
 
 
-    ], 201);
-}
+//     ], 201);
+//}
 
 
 

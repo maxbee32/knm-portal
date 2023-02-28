@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -464,14 +465,19 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(),[
             'name' => 'required',
             'description' => 'required',
-            'image' =>'required' //| //$image
+            'image' =>'required|image|mimes:jpg,png,jpeg,gif,svg' //| //$image
 
         ]);
         if($validator-> fails()){
 
             return $this->sendError($validator->errors(), 'Validation Error', 422);
         }
+
+        $image =$request->file('image')->store('public/images');
+
+
          Categories::create(array_merge(
+            ['image'=>$image],
             $validator-> validated()
 
         ));
@@ -484,9 +490,55 @@ class AdminController extends Controller
         );
     }
 
-   //get all records for ctegories
+   //get all records for categories
     public function showCategory(){
-        return Categories::all();
+        $categories = Categories::all();
+
+        return $this->sendResponse(($categories),
+            [
+                'success' => true,
+                'message' => "Categories Retrieved Successfully.",
+            ],
+            200
+        );
+    }
+
+
+    public function updateCategory(Request $request, $id){
+        $categories = $request->all();
+
+        $validator = Validator::make($categories,[
+            'name' => 'required',
+            'description' => 'required',
+            'image' =>'required|image|mimes:jpg,png,jpeg,gif,svg' //| //$image
+
+        ]);
+        if($validator-> fails()){
+
+            return $this->sendError($validator->errors(), 'Validation Error', 422);
+        }
+
+         $Category = Categories::find($id);
+         $Category->name =$categories['name'];
+         $Category->description =$categories['description'];
+         $image = $Category->image;
+         if($request->hasFile('image')){
+            Storage::delete($Category->image);
+         $image =$request->file('image')->store('public/images');
+         }
+
+        Categories::create(array_merge(
+            ['image'=>$image],
+            $validator-> validated()
+
+        ));
+        return $this->sendResponse(
+            [
+                'success' => true,
+                'message' => "New category created",
+            ],
+            200
+        );
     }
 
 
