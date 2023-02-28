@@ -73,8 +73,8 @@ public function userLogin(Request $request){
 
 public function userSignUp(Request $request){
     $validator = Validator::make($request-> all(),[
-        'email' => 'required|string|email:rfc,filter,dns|unique:users',
-         'password'=> 'required|string|min:6|confirmed',
+        'email' => 'bail|required|string|email:rfc,filter,dns|unique:users',
+         'password'=> 'required|alpha_num:ascii|min:6|confirmed',
        // 'password'=>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed'
     ]);
 
@@ -108,7 +108,7 @@ public function userSignUp(Request $request){
 
 }
 
-   // Mail::to($request->email)->send(new VerifyEmail($pin));
+      Mail::to($request->email)->send(new VerifyEmail($pin));
 
     $token = $user->createToken('myapptoken')->plainTextToken;
 
