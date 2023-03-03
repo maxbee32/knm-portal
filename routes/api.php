@@ -37,6 +37,9 @@ Route::post("user-forgotpassword","App\Http\Controllers\UserController@forgotPas
 Route::post("user-verify-pin","App\Http\Controllers\UserController@verifyPin");
 
 Route::post("user-reset-password","App\Http\Controllers\UserController@resetPassword");
+
+Route::post("user-reservation","App\Http\Controllers\UserController@storeReservation");
+
 });
 
 
@@ -73,3 +76,11 @@ Route::group(['middleware'=>'api',
     Route::post("admin-show-categories","App\Http\Controllers\AdminController@showCategory");
     });
 
+
+// Route::group(['middleware'=>'auth:api',
+//     'prefix'=>'user'
+// ],function($router){
+
+// Route::post("user-reservation","App\Http\Controllers\TicketController@storeReservation");
+
+// });

@@ -9,18 +9,27 @@ class Ticket extends Model
 {
     use HasFactory;
 
-    protected $fiilable = [
-        'user_id',
-        'fullname',
-        'country',
-        'city',
-        'phone_number',
-        'reservation_date',
-        'numberOfChildren',
-        'numberOfAdult',
-        'numberOfTicket',
-        'ticketId',
-        'gender',
-        'status'
-    ];
+    protected $guarded=[];
+
+    // protected $fiilable = [
+    //     'user_id',
+    //     'fullname',
+    //     'country',
+    //     'city',
+    //     'phone_number',
+    //     'reservation_date',
+    //     'numberOfChildren',
+    //     'numberOfAdult',
+    //     'numberOfTicket',
+    //     'ticketId',
+    //     'gender',
+    //     'status'
+
+    // ];
+
+
+    public function user()
+    {
+        return $this->belongsTo('App\User');
+    }
 }

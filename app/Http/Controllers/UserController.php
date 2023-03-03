@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Booking;
+use App\Models\Ticket;
 use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
 use Illuminate\Http\Request;
@@ -12,6 +12,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use Haruncpi\LaravelIdGenerator\IdGenerator;
 
 
 class UserController extends Controller
@@ -38,13 +40,16 @@ class UserController extends Controller
 
 
 public function __construct(){
-    $this->middleware('auth:api', ['except'=>['userSignUp', 'userLogin','userLogout','verifyEmail','resendPin','forgotPassword', 'verifyPin','resetPassword']]);
+    $this->middleware('auth:api', ['except'=>['userSignUp', 'userLogin','userLogout','verifyEmail','resendPin','forgotPassword', 'verifyPin','resetPassword',
+                                'storeReservation']]);
 }
 
 public function userLogin(Request $request){
     $validator = Validator::make($request->all(), [
         'email'=>'required|email:rfc,filter,dns',
-        'password' =>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed',
+        'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
     ]);
 
     if($validator->fails()){
@@ -73,8 +78,11 @@ public function userLogin(Request $request){
 
 public function userSignUp(Request $request){
     $validator = Validator::make($request-> all(),[
-        'email' => 'bail|required|string|email:rfc,filter,dns|unique:users',
-         'password'=> 'required|alpha_num:ascii|min:6|confirmed',
+        'email' => 'required|string|email:rfc,filter,dns|unique:users',
+         'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+                      //  alpha_dash:ascii|min:6|confirmed'],
        // 'password'=>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed'
     ]);
 
@@ -89,6 +97,12 @@ public function userSignUp(Request $request){
                 $validator-> validated(),
                 ['password'=>bcrypt($request->password)]
             ));
+
+
+        if(!$token = auth()->attempt($validator->validated())){
+            return $this->sendError([], "Invalid signup credentials", 400);
+        }
+
         if ($user ){
             $verify2 = DB::table('password_resets')->where([
                 ['email',$request->all()['email']]
@@ -110,32 +124,35 @@ public function userSignUp(Request $request){
 
       Mail::to($request->email)->send(new VerifyEmail($pin));
 
-    $token = $user->createToken('myapptoken')->plainTextToken;
+      return $this-> createNewToken1($token);
+   // $token = $user->createToken('myapptoken')->plainTextToken;
 
 
-        return $this->sendResponse(
-            ['success'=>'true',
-            'message'=>'User registered successfully.
-             Please check your email for a 4-digit pin to verify your email.',
-            'token'=>$token
-        ], 201);
+        // return $this->sendResponse(
+        //     ['success'=>'true',
+        //     'message'=>'User registered successfully.
+        //      Please check your email for a 4-digit pin to verify your email.',
+        //     'token'=>$token
+        // ], 201);
 }
 
 
 
 public function verifyEmail(Request $request){
+  $email = auth()->user()->email;
     $validator = Validator::make($request->all(),[
         'code'=> '',
-        'email' => 'email',
+        'email' => $email,
     ]);
 
     if($validator->fails()){
         return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
     }
 
-    $user = User::where('email',$request->email);
+
+    $user = User::where('email',$email);
     $select = DB::table('password_resets')->where([
-                                'email' => $request->email,
+                                'email' => $email,
                                 'code' => $request->code
                                   ]);
 
@@ -155,7 +172,7 @@ public function verifyEmail(Request $request){
 
 
     $select = DB::table('password_resets')
-    ->where('email', $request->email)
+    ->where('email', $email)
     ->where('code', $request->code)
     ->delete();
 
@@ -339,46 +356,66 @@ public function resetPassword(Request $request)
 }
 
 
-//   //store booking
-//   public function storeReservation(Request $request){
-//     $validator= Validator::make($request-> all(),[
-//         'image' => 'nullable|dimensions:max_width=500,max_heigt=500|size=5000',
-//         'firstname'=> 'required|string',
-//         'lastname'=> 'required|string',
-//         'gender'=> 'required|in:Male,Female',
-//         'country'=> 'required|string',
-//         'region'=> 'required|string',
-//         'city'=> 'required|string',
-//         'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
-//         'reservation_date'=> 'required|dateTime',
-//         'no_of_ticket'=>'required|numeric'
+   //store booking
+   public function storeReservation(Request $request){
+    $validator= Validator::make($request-> all(),[
 
-//     ]);
-
-//     if($validator-> fails()){
-
-//         return $this->sendError($validator->errors(), 'Validation Error', 422);
-//     }
-
-//     if(Carbon::now()> $request->reservation_date){
-//         return $this->sendError([
-//             'success'=> false, 'message' => "Date in the past is not allowed. Kindly select a current date"
-//         ], 400);
-//     }
-
-//        Booking::create(array_merge(
-//         ['user_id' => optional(auth()->user())->id],
-//         $validator-> validated()
-//     ));
-
-//     return $this->sendResponse(
-//         ['success'=>'true',
-//         'message'=>'Reservation completed successfully.'
+        'fullname'=> 'required|string',
+        'gender'=> 'required|in:Male,Female',
+        'country'=> 'required|string',
+        //'region'=> 'required|string',
+        'city'=> 'required|string',
+        'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
+        'reservation_date'=> 'required|date',
+        'numberOfTicket'=>'required|numeric',
+        'numberOfChildren'=>'nullable|numeric',
+        'numberOfAdult'=>'nullable|numeric',
+        'status'=>'Pending',
+        //'ticketId' => 'required|Unique'
 
 
+    ]);
 
-//     ], 201);
-//}
+    if($validator-> fails()){
+
+        return $this->sendError($validator->errors(), 'Validation Error', 422);
+    }
+
+    if(Carbon::now()> $request->reservation_date){
+        return $this->sendError([
+            'success'=> false, 'message' => "Date in the past is not allowed. Kindly select a current date"
+        ], 400);
+    }
+
+
+    if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
+        return $this->sendError([
+            'success'=>false,'message'=>"Number of tickets should be equal to guest provided"
+        ], 400);
+    }
+
+
+
+    $Id =IdGenerator::generate(['table'=>'tickets','field'=>'ticketId','length'=>10,'prefix'=>'TIC-']);
+
+     Ticket::create(array_merge(
+        ['user_id' => optional(Auth()->user())->id],
+        ['ticketId'=>$Id],
+        $validator-> validated()
+    ));
+
+    return $this->sendResponse(
+        ['success'=>'true',
+        'message'=>'Reservation completed successfully.'
+
+
+
+    ], 201);
+}
+
+
+
+
 
 
 
@@ -407,5 +444,19 @@ public function createNewToken($token){
         'message' => "Logged in successfully"
     ]);
 }
+
+
+
+public function createNewToken1($token){
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'bearer',
+        'expires_in' => auth()->factory()->getTTL()* 60,
+         'user'=>auth()->user(),
+        'message'=>'User registered successfully.
+        Please check your email for a 4-digit pin to verify your email.'
+    ],201);
+}
+
 
 }

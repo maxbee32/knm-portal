@@ -26,8 +26,9 @@ return new class extends Migration
             $table->string('country');
             $table->string('city');
             $table->string('gender');
-            $table->string('status');
+            $table->string('status')->default('pending');
             $table->timestamps();
+
 
             $table->foreign('user_id')
             ->references('id')->on('users')
