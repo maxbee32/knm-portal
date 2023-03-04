@@ -331,7 +331,9 @@ public function resetPassword(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'email' => 'required'|'string'|'email',
-        'password' => 'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed',
+        'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed']
     ]);
 
     if ($validator->fails()) {
@@ -455,7 +457,7 @@ public function createNewToken1($token){
          'user'=>auth()->user(),
         'message'=>'User registered successfully.
         Please check your email for a 4-digit pin to verify your email.'
-    ],201);
+    ]);
 }
 
 

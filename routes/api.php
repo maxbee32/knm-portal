@@ -23,7 +23,7 @@ Route::group(['middleware'=>'api',
 ],function($router){
 
 Route:: post("user-signup","App\Http\Controllers\UserController@userSignUp");
-
+  
 Route::post("user-login","App\Http\Controllers\UserController@userLogin");
 
 Route::post("user-logout", "App\Http\Controllers\UserController@userLogout");
