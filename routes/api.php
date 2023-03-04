@@ -23,7 +23,7 @@ Route::group(['middleware'=>'api',
 ],function($router){
 
 Route:: post("user-signup","App\Http\Controllers\UserController@userSignUp");
-  
+
 Route::post("user-login","App\Http\Controllers\UserController@userLogin");
 
 Route::post("user-logout", "App\Http\Controllers\UserController@userLogout");
@@ -39,6 +39,9 @@ Route::post("user-verify-pin","App\Http\Controllers\UserController@verifyPin");
 Route::post("user-reset-password","App\Http\Controllers\UserController@resetPassword");
 
 Route::post("user-reservation","App\Http\Controllers\UserController@storeReservation");
+
+
+Route::put("update-reservation/{id}","App\Http\Controllers\UserController@updateReservation");
 
 });
 

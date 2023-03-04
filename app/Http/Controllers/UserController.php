@@ -41,7 +41,7 @@ class UserController extends Controller
 
 public function __construct(){
     $this->middleware('auth:api', ['except'=>['userSignUp', 'userLogin','userLogout','verifyEmail','resendPin','forgotPassword', 'verifyPin','resetPassword',
-                                'storeReservation']]);
+                                'storeReservation', 'updateReservation']]);
 }
 
 public function userLogin(Request $request){
@@ -362,7 +362,7 @@ public function resetPassword(Request $request)
    public function storeReservation(Request $request){
     $validator= Validator::make($request-> all(),[
 
-        'fullname'=> 'required|string',
+        'fullname'=> 'required|string|',
         'gender'=> 'required|in:Male,Female',
         'country'=> 'required|string',
         //'region'=> 'required|string',
@@ -408,7 +408,7 @@ public function resetPassword(Request $request)
 
     return $this->sendResponse(
         ['success'=>'true',
-        'message'=>'Reservation completed successfully.'
+        'message'=>'Proceed to make payment.'
 
 
 
@@ -416,9 +416,39 @@ public function resetPassword(Request $request)
 }
 
 
+    public function updateReservation(Request $request, $id){
+        $validator= Validator::make($request-> all(),[
+
+            'fullname'=> 'required|string|',
+            'gender'=> 'required|in:Male,Female',
+            'country'=> 'required|string',
+            'city'=> 'required|string',
+            'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
+            'reservation_date'=> 'required|date',
+            'numberOfTicket'=>'required|numeric',
+            'numberOfChildren'=>'nullable|numeric',
+            'numberOfAdult'=>'nullable|numeric',
+            'status'=>'Pending',
+
+
+        ]);
+
+        if($validator-> fails()){
+
+            return $this->sendError($validator->errors(), 'Validation Error', 422);
+        }
+
+      $reservation= Ticket::find($id);
+      $reservation->update($validator-> validated());
+      return $this->sendResponse(
+        ['success'=>'true',
+        'message'=>'You have successfully rescheduled.'
 
 
 
+    ], 201);
+
+    }
 
 
 
