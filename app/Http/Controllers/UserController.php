@@ -82,24 +82,15 @@ public function userSignUp(Request $request){
          'password'=> ['required',
                         'string',
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
-                      //  alpha_dash:ascii|min:6|confirmed'],
-       // 'password'=>'required'|'regex:^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$|confirmed'
     ]);
 
      if($validator-> fails()){
         return $this->sendError($validator->errors(), 'Validation Error', 422);
     }
-    // $user_status  = User::where("email", $request->email)->first();
-    //     if(!is_null($user_status)){
-    //         return $this->sendError([], "Whoops! email already registered", 400);
-    //     }
-
-    //     else{
         $user = User::create(array_merge(
                 $validator-> validated(),
                 ['password'=>bcrypt($request->password)]
             ));
-        // }
 
         if(!$token = auth()->attempt($validator->validated())){
             return $this->sendError([], "Invalid signup credentials", 400);
@@ -127,15 +118,6 @@ public function userSignUp(Request $request){
       Mail::to($request->email)->send(new VerifyEmail($pin));
 
       return $this-> createNewToken1($token);
-   // $token = $user->createToken('myapptoken')->plainTextToken;
-
-
-        // return $this->sendResponse(
-        //     ['success'=>'true',
-        //     'message'=>'User registered successfully.
-        //      Please check your email for a 4-digit pin to verify your email.',
-        //     'token'=>$token
-        // ], 201);
 }
 
 
@@ -419,18 +401,18 @@ public function resetPassword(Request $request)
 
 
     public function updateReservation(Request $request, $id){
-        $validator= Validator::make($request-> all(),[
+        $validator= Validator::make($request-> only(['fullname','gender','phone_number','reservation_date']),[
 
             'fullname'=> 'required|string|',
             'gender'=> 'required|in:Male,Female',
-            'country'=> 'required|string',
-            'city'=> 'required|string',
+            //'country'=> 'required|string',
+            //'city'=> 'required|string',
             'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
             'reservation_date'=> 'required|date',
-            'numberOfTicket'=>'required|numeric',
-            'numberOfChildren'=>'nullable|numeric',
-            'numberOfAdult'=>'nullable|numeric',
-            'status'=>'Pending',
+           // 'numberOfTicket'=>'required|numeric',
+            //'numberOfChildren'=>'nullable|numeric',
+            //'numberOfAdult'=>'nullable|numeric',
+           // 'status'=>'Pending',
 
 
         ]);
@@ -451,13 +433,13 @@ public function resetPassword(Request $request)
        $reservation= Ticket::findorfail($id);
        $reservation->fullname = $request->fullname;
        $reservation->gender = $request->gender;
-       $reservation->country = $request->country;
-       $reservation->city = $request->city;
+    //    $reservation->country = $request->country;
+    //    $reservation->city = $request->city;
        $reservation->phone_number = $request->phone_number;
        $reservation->reservation_date = $request->reservation_date;
-       $reservation->numberOfTicket = $request->numberOfTicket;
-       $reservation->numberOfChildren = $request->numberOfChildren;
-       $reservation->numberOfAdult = $request->numberOfAdult;
+    //    $reservation->numberOfTicket = $request->numberOfTicket;
+    //    $reservation->numberOfChildren = $request->numberOfChildren;
+    //    $reservation->numberOfAdult = $request->numberOfAdult;
        $reservation->save();
       //$reservation->update($validator-> validated());
       return $this->sendResponse(
