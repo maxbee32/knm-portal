@@ -89,15 +89,17 @@ public function userSignUp(Request $request){
      if($validator-> fails()){
         return $this->sendError($validator->errors(), 'Validation Error', 422);
     }
-    $user_status  = User::where("email", $request->email)->first();
-        if(!is_null($user_status)){
-            return $this->sendError([], "Whoops! email already registered", 400);
-        }
+    // $user_status  = User::where("email", $request->email)->first();
+    //     if(!is_null($user_status)){
+    //         return $this->sendError([], "Whoops! email already registered", 400);
+    //     }
+
+    //     else{
         $user = User::create(array_merge(
                 $validator-> validated(),
                 ['password'=>bcrypt($request->password)]
             ));
-
+        // }
 
         if(!$token = auth()->attempt($validator->validated())){
             return $this->sendError([], "Invalid signup credentials", 400);
@@ -438,16 +440,32 @@ public function resetPassword(Request $request)
             return $this->sendError($validator->errors(), 'Validation Error', 422);
         }
 
-      $reservation= Ticket::find($id);
-      $reservation->update($validator-> validated());
+
+        if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
+            return $this->sendError([
+                'success'=>false,'message'=>"Number of tickets should be equal to guest provided"
+            ], 400);
+        }
+        else{
+
+       $reservation= Ticket::findorfail($id);
+       $reservation->fullname = $request->fullname;
+       $reservation->gender = $request->gender;
+       $reservation->country = $request->country;
+       $reservation->city = $request->city;
+       $reservation->phone_number = $request->phone_number;
+       $reservation->reservation_date = $request->reservation_date;
+       $reservation->numberOfTicket = $request->numberOfTicket;
+       $reservation->numberOfChildren = $request->numberOfChildren;
+       $reservation->numberOfAdult = $request->numberOfAdult;
+       $reservation->save();
+      //$reservation->update($validator-> validated());
       return $this->sendResponse(
         ['success'=>'true',
         'message'=>'You have successfully rescheduled.'
+        ], 201);
 
-
-
-    ], 201);
-
+            }
     }
 
 

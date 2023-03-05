@@ -41,7 +41,7 @@ Route::post("user-reset-password","App\Http\Controllers\UserController@resetPass
 Route::post("user-reservation","App\Http\Controllers\UserController@storeReservation");
 
 
-Route::put("update-reservation/{id}","App\Http\Controllers\UserController@updateReservation");
+Route::post("update-reservation/{user_id}","App\Http\Controllers\UserController@updateReservation");
 
 });
 
