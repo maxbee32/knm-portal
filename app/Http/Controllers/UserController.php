@@ -29,7 +29,7 @@ class UserController extends Controller
      }
 
 
-     public function sendError($errorData, $message, $status =500){
+     public function sendError($errorData, $message, $status =400){
         $response =[];
         $response['message'] = $message;
         if (!empty($errorData)) {
@@ -53,7 +53,7 @@ public function userLogin(Request $request){
     ]);
 
     if($validator->fails()){
-        return $this->sendError($validator->errors(),'Validation Error', 422);
+        return $this->sendError($validator->errors(),'Validation Error', 400);
 
     }
 
@@ -67,7 +67,7 @@ public function userLogin(Request $request){
                 'success' => false,
                 'message' => 'Please verify your email before you can continue'
             ],
-            401
+            400
         );
     }
 
@@ -273,7 +273,7 @@ public function verifyPin(Request $request)
     ]);
 
     if ($validator->fails()) {
-        return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
+        return $this->sendError(['success' => false, 'message' => $validator->errors()], 400);
     }
 
     $check = DB::table('password_resets')->where([
@@ -305,7 +305,7 @@ public function verifyPin(Request $request)
                 'success' => false,
                 'message' => "Invalid token"
             ],
-            401
+            400
         );
     }
 }
@@ -314,22 +314,33 @@ public function verifyPin(Request $request)
 public function resetPassword(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'email' => 'required'|'string'|'email',
+        'email' => ['required','string','email'],
         'password'=> ['required',
                         'string',
-                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed']
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
     ]);
 
     if ($validator->fails()) {
-        return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
+        return $this->sendError(['success' => false, 'message' => $validator->errors()], 400);
     }
+
+
+
+    // if(!$token = auth()->attempt($validator->validated())){
+    //     return $this->sendError([], "Invalid credentials", 400);
+    // }
+
+
 
     $user = User::where('email',$request->email);
     $user->update([
         'password'=>bcrypt($request->password)
     ]);
 
-    $token = $user->first()->createToken('myapptoken')->plainTextToken;
+
+
+   // return $this-> createNewToken2($token);
+     $token = $user->first()->createToken('myapptoken')->plainTextToken;
 
     return $this->sendResponse(
         [
@@ -428,6 +439,38 @@ public function resetPassword(Request $request)
                 'success'=>false,'message'=>"Number of tickets should be equal to guest provided"
             ], 400);
         }
+
+        // if((carbon::parse($request->reservation_date)) == Carbon::parse($request->reservation_date)){
+        //     return $this->sendError([
+        //         'success'=> false, 'message' => "Sorry you can have already reserved this day."
+        //     ], 400);
+        // }
+
+           //else{         //   20-05-23 <30-04-23 <
+            // $select = DB::table('tickets')->where([
+            //     'reservation_date' => $request->reservation_date,
+            //       ]);
+
+            $startDate =carbon::parse($request->reservation_date);
+            $endDate = carbon::parse($request->reservation_date)->addDays(21);
+        if (
+            Ticket::whereNotBetween(DB::raw('DATE(reservation_date)'), [$startDate, $endDate])->get()){
+                return $this->sendError([
+                    'success'=> false, 'message' => "Sorry you can only reschedule within 21days."
+                ], 400);
+            }
+
+            // ;
+
+
+
+        // if(carbon::parse($request->reservation_date)->addDays(21) < carbon::parse($request->reservation_date)){
+        //     return $this->sendError([
+        //         'success'=> false, 'message' => "Sorry you can only reschedule within 21days."
+        //     ], 400);
+
+        // }
+
         else{
 
        $reservation= Ticket::findorfail($id);
@@ -447,7 +490,7 @@ public function resetPassword(Request $request)
         'message'=>'You have successfully rescheduled.'
         ], 201);
 
-            }
+       }
     }
 
 
@@ -491,4 +534,14 @@ public function createNewToken1($token){
 }
 
 
+
+public function createNewToken2($token){
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'bearer',
+        'expires_in' => auth()->factory()->getTTL()* 60,
+         'user'=>auth()->user(),
+        'message'=>'Your password has been reset.'
+    ]);
+}
 }
