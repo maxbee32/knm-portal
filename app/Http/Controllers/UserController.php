@@ -29,14 +29,14 @@ class UserController extends Controller
      }
 
 
-     public function sendError($errorData, $message, $status =400){
-        $response =[];
-        $response['message'] = $message;
-        if (!empty($errorData)) {
-            $response['data'] = $errorData;
-     }
-     return response()->json($response, $status);
-    }
+    //  public function sendError($errorData, $message, $status =400){
+    //     $response =[];
+    //     $response['message'] = $message;
+    //     if (!empty($errorData)) {
+    //         $response['data'] = $errorData;
+    //  }
+    //  return response()->json($response, $status);
+    // }
 
 
 public function __construct(){
@@ -54,27 +54,43 @@ public function userLogin(Request $request){
 
 
     if($validator->fails()){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
-        ], 200);
+        ], 400);
+
+        // return response()->json([
+        //     'success' => false,
+        //     'data'=> $validator->errors(),
+        //     'message' => 'Validation Error'
+        // ], 200);
 
     }
 
     if(!$token = auth()->attempt($validator->validated())){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
+            'data'=> $validator->errors(),
             'message' => 'Invalid login credentials'
-        ], 200);
+        ], 400);
+
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => 'Invalid login credentials'
+        // ], 200);
 
     }
 
     if(auth()->user()->email_verified_at == null){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'message' => 'Please verify your email before you can continue'
-        ], 200);
+        ], 400);
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => 'Please verify your email before you can continue'
+        // ], 200);
 
     }
 
@@ -92,11 +108,11 @@ public function userSignUp(Request $request){
     ]);
 
      if($validator-> fails()){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
-            'message' => 'Validation Error'
-        ], 200);
+            'message' => 'Invalid login credentials'
+        ], 400);
 
     }
         $user = User::create(array_merge(
@@ -105,10 +121,10 @@ public function userSignUp(Request $request){
             ));
 
         if(!$token = auth()->attempt($validator->validated())){
-            return response()->json([
+            return $this->sendResponse([
                 'success' => false,
                 'message' => 'Invalid login credentials'
-            ], 200);
+            ], 400);
         }
 
         if ($user ){
@@ -145,11 +161,16 @@ public function verifyEmail(Request $request){
     ]);
 
     if($validator->fails()){
-      return response()->json([
-        'success' => false,
-        'data'=> $validator->errors(),
-        'message' => 'Validation Error'
-    ], 200);
+        return $this->sendResponse([
+            'success' => false,
+            'data'=> $validator->errors(),
+            'message' => 'Validation Error'
+        ], 400);
+    //   return response()->json([
+    //     'success' => false,
+    //     'data'=> $validator->errors(),
+    //     'message' => 'Validation Error'
+    // ], 200);
     }
 
 
@@ -161,20 +182,30 @@ public function verifyEmail(Request $request){
 
 
     if($select->get()->isEmpty()){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Invalid token'
-        ], 200);
+        ], 400);
+        // return response()->json([
+        //     'success' => false,
+        //     'data'=> $validator->errors(),
+        //     'message' => 'Invalid token'
+        // ], 200);
     }
 
     $difference = Carbon::now()->diffInSeconds($select->first()->created_at);
     if($difference > 3600){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Token Expired'
-        ], 200);
+        ], 400);
+        // return response()->json([
+        //     'success' => false,
+        //     'data'=> $validator->errors(),
+        //     'message' => 'Token Expired'
+        // ], 200);
 
     }
 
@@ -187,11 +218,14 @@ public function verifyEmail(Request $request){
     $user->update([
         'email_verified_at'=> Carbon::now()
     ]);
-
-    return response()->json([
+    return $this->sendResponse([
         'success' => true,
-        'message' => "Email is verified."
+        'message' => 'Email is verified.'
     ], 200);
+    // return response()->json([
+    //     'success' => true,
+    //     'message' => "Email is verified."
+    // ], 200);
 
 
 
@@ -205,11 +239,11 @@ public function resendPin(Request $request){
     ]);
 
     if($validator->fails()){
-      return response()->json([
-        'success' => false,
-        'data'=> $validator->errors(),
-        'message' => 'Validation Error'
-    ], 200);
+        return $this->sendResponse([
+            'success' => false,
+            'data'=> $validator->errors(),
+            'message' => 'Validation Error'
+        ], 400);
     }
 
     $verify= DB::table('password_resets')->where([
@@ -230,10 +264,14 @@ public function resendPin(Request $request){
 
     if($password_reset){
         Mail::to($request->all()['email'])->send(new VerifyEmail($token));
-        return response()->json([
+        return $this->sendResponse([
             'success' => true,
-            'message'=>"A verification mail has been resent."
+            'message' => 'A verification mail has been resent.'
         ], 200);
+        // return response()->json([
+        //     'success' => true,
+        //     'message'=>"A verification mail has been resent."
+        // ], 200);
 
     }
 
@@ -247,11 +285,11 @@ public function forgotPassword(Request $request){
     ]);
 
     if ($validator->fails()) {
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
-        ], 200);
+        ], 400);
 
     }
 
@@ -275,18 +313,25 @@ public function forgotPassword(Request $request){
 
         if ($password_reset) {
             Mail::to($request->all()['email'])->send(new ResetPassword($token));
-
-
-            return response()->json([
+            return $this->sendResponse([
                 'success' => true,
-                'message'=>"Please check your email for a 4 digit pin."
+                'message' => 'Please check your email for a 4 digit pin.'
             ], 200);
+
+            // return response()->json([
+            //     'success' => true,
+            //     'message'=>"Please check your email for a 4 digit pin."
+            // ], 200);
         }
     } else {
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
-            'message' => "This email does not exist"
-        ], 200);
+            'message' => 'This email does not exist.'
+        ], 400);
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => "This email does not exist"
+        // ], 200);
 
 
     }
@@ -302,11 +347,11 @@ public function verifyPin(Request $request){
     ]);
 
     if ($validator->fails()) {
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
-        ], 200);
+        ], 400);
     }
 
     $check = DB::table('password_resets')->where([
@@ -317,11 +362,14 @@ public function verifyPin(Request $request){
     if ($check->exists()) {
         $difference = Carbon::now()->diffInSeconds($check->first()->created_at);
         if ($difference > 3600) {
-            //return $this->sendError(['success' => false, 'message' => "Token Expired"], 400);
-            return response()->json([
+            return $this->sendResponse([
                 'success' => false,
                 'message' => 'Token Expired'
-            ], 200);
+            ], 400);
+            // return response()->json([
+            //     'success' => false,
+            //     'message' => 'Token Expired'
+            // ], 200);
         }
 
         $delete = DB::table('password_resets')->where([
@@ -329,16 +377,24 @@ public function verifyPin(Request $request){
             ['code', $request->all()['code']],
         ])->delete();
 
-        return response()->json([
+        return $this->sendResponse([
             'success' => true,
-            'message'=>"You can now reset your password"
+            'message' => 'You can now reset your password'
         ], 200);
+        // return response()->json([
+        //     'success' => true,
+        //     'message'=>"You can now reset your password"
+        // ], 200);
 
     } else {
-        return response()->json([
-            'success' => false,
+        return $this->sendResponse([
+            'success' => true,
             'message' => 'Invalid token'
-        ], 200);
+        ], 400);
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => 'Invalid token'
+        // ], 200);
 
     }
 }
@@ -355,11 +411,11 @@ public function resetPassword(Request $request){
 
 
     if ($validator->fails()) {
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
-        ], 200);
+        ], 400);
 
 
     }
@@ -370,11 +426,14 @@ public function resetPassword(Request $request){
     $user->update([
         'password'=>bcrypt($request->password)
     ]);
-    
-    return response()->json([
+    return $this->sendResponse([
         'success' => true,
-        'message'=>"Your password has been reset"
+        'message' => 'Your password has been reset'
     ], 200);
+    // return response()->json([
+    //     'success' => true,
+    //     'message'=>"Your password has been reset"
+    // ], 200);
 
 
 }
@@ -383,6 +442,7 @@ public function resetPassword(Request $request){
    //store booking
    public function storeReservation(Request $request){
     $validator= Validator::make($request-> all(),[
+
         'fullname'=> 'required|string|',
         'gender'=> 'required|in:Male,Female',
         'country'=> 'required|string',
@@ -400,28 +460,39 @@ public function resetPassword(Request $request){
     ]);
 
     if($validator-> fails()){
-        return response()->json([
+
+        return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
-        ], 200);
+        ], 400);
 
     }
 
     if(Carbon::now()> $request->reservation_date){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'message' => 'Date in the past is not allowed. Kindly select a current date'
-        ], 200);
+        ], 400);
+
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => 'Date in the past is not allowed. Kindly select a current date'
+        // ], 200);
 
     }
 
 
     if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
-        return response()->json([
+        return $this->sendResponse([
             'success' => false,
             'message' => 'Number of tickets should be equal to guest provided'
-        ], 200);
+        ], 400);
+
+        // return response()->json([
+        //     'success' => false,
+        //     'message' => 'Number of tickets should be equal to guest provided'
+        // ], 200);
 
     }
 
@@ -434,11 +505,11 @@ public function resetPassword(Request $request){
         ['ticketId'=>$Id],
         $validator-> validated()
     ));
-
-    return response()->json([
+    return $this->sendResponse([
         'success' => true,
-        'message'=> "Proceed to make payment"
+        'message' => 'Proceed to make payment.'
     ], 200);
+
 
 
 }
@@ -462,20 +533,24 @@ public function resetPassword(Request $request){
         ]);
 
         if($validator-> fails()){
-            return response()->json([
+            return $this->sendResponse([
                 'success' => false,
-                'data'=>$validator->errors(),
+                'data'=> $validator->errors(),
                 'message' => 'Validation Error'
-            ], 200);
+            ], 400);
 
         }
 
 
         if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
-            return response()->json([
+            return $this->sendResponse([
                 'success' => false,
                 'message' => 'Number of tickets should be equal to guest provided'
-            ], 200);
+            ], 400);
+            // return response()->json([
+            //     'success' => false,
+            //     'message' => 'Number of tickets should be equal to guest provided'
+            // ], 200);
 
         }
 
@@ -494,10 +569,14 @@ public function resetPassword(Request $request){
             $endDate = carbon::parse($request->reservation_date)->addDays(21);
         if (
             Ticket::whereNotBetween(DB::raw('DATE(reservation_date)'), [$startDate, $endDate])->get()){
-                return response()->json([
+                return $this->sendResponse([
                     'success' => false,
                     'message' => 'Sorry you can only reschedule within 21days.'
-                ], 200);
+                ], 400);
+                // return response()->json([
+                //     'success' => false,
+                //     'message' => 'Sorry you can only reschedule within 21days.'
+                // ], 200);
 
             }
 
@@ -517,11 +596,10 @@ public function resetPassword(Request $request){
        $reservation->save();
       //$reservation->update($validator-> validated());
 
-    return response()->json([
+      return $this->sendResponse([
         'success' => true,
-        'message'=> "You have successfully rescheduled."
+        'message' => 'You have successfully rescheduled.'
     ], 200);
-
 
        }
     }
@@ -567,6 +645,7 @@ public function createNewToken1($token){
         Please check your email for a 4-digit pin to verify your email.'
     ]);
 }
+
 
 
 }
