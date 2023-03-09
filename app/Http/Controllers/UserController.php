@@ -53,7 +53,7 @@ public function userLogin(Request $request){
     ]);
 
 
-    if($validator->fails()){
+    if($validator->stopOnFirstFailure()-> fails()){
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -101,17 +101,17 @@ public function userLogin(Request $request){
 
 public function userSignUp(Request $request){
     $validator = Validator::make($request-> all(),[
-        'email' => ['required','string','email:rfc,filter,dns','unique:users'],
+        'email' => ['bail','required','string','email:rfc,filter,dns','unique:users'],
          'password'=> ['required',
                         'string',
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
     ]);
 
-     if($validator-> fails()){
+     if($validator->stopOnFirstFailure()-> fails()){
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
-            'message' => 'Invalid login credentials'
+            'message' => 'Validation Error'
         ], 400);
 
     }
