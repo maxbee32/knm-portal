@@ -400,7 +400,7 @@ public function resetPassword(Request $request){
     ]);
     return $this->sendResponse([
         'success' => true,
-        'message' => 'Your password has been reset'
+        'message' => 'Your password has been reset successfully'
     ], 200);
 
 
