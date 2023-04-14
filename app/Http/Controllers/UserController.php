@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -60,11 +61,6 @@ public function userLogin(Request $request){
             'message' => 'Validation Error'
         ], 400);
 
-        // return response()->json([
-        //     'success' => false,
-        //     'data'=> $validator->errors(),
-        //     'message' => 'Validation Error'
-        // ], 200);
 
     }
 
@@ -75,11 +71,6 @@ public function userLogin(Request $request){
             'message' => 'Invalid login credentials'
         ], 400);
 
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => 'Invalid login credentials'
-        // ], 200);
-
     }
 
     if(auth()->user()->email_verified_at == null){
@@ -87,10 +78,7 @@ public function userLogin(Request $request){
             'success' => false,
             'message' => 'Please verify your email before you can continue'
         ], 400);
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => 'Please verify your email before you can continue'
-        // ], 200);
+
 
     }
 
@@ -166,11 +154,7 @@ public function verifyEmail(Request $request){
             'data'=> $validator->errors(),
             'message' => 'Validation Error'
         ], 400);
-    //   return response()->json([
-    //     'success' => false,
-    //     'data'=> $validator->errors(),
-    //     'message' => 'Validation Error'
-    // ], 200);
+
     }
 
 
@@ -187,11 +171,8 @@ public function verifyEmail(Request $request){
             'data'=> $validator->errors(),
             'message' => 'Invalid token'
         ], 400);
-        // return response()->json([
-        //     'success' => false,
-        //     'data'=> $validator->errors(),
-        //     'message' => 'Invalid token'
-        // ], 200);
+
+
     }
 
     $difference = Carbon::now()->diffInSeconds($select->first()->created_at);
@@ -201,11 +182,6 @@ public function verifyEmail(Request $request){
             'data'=> $validator->errors(),
             'message' => 'Token Expired'
         ], 400);
-        // return response()->json([
-        //     'success' => false,
-        //     'data'=> $validator->errors(),
-        //     'message' => 'Token Expired'
-        // ], 200);
 
     }
 
@@ -222,10 +198,6 @@ public function verifyEmail(Request $request){
         'success' => true,
         'message' => 'Email is verified.'
     ], 200);
-    // return response()->json([
-    //     'success' => true,
-    //     'message' => "Email is verified."
-    // ], 200);
 
 
 
@@ -268,10 +240,6 @@ public function resendPin(Request $request){
             'success' => true,
             'message' => 'A verification mail has been resent.'
         ], 200);
-        // return response()->json([
-        //     'success' => true,
-        //     'message'=>"A verification mail has been resent."
-        // ], 200);
 
     }
 
@@ -284,6 +252,7 @@ public function forgotPassword(Request $request){
         'email' => ['required', 'string', 'email', 'max:255'],
     ]);
 
+
     if ($validator->fails()) {
         return $this->sendResponse([
             'success' => false,
@@ -293,7 +262,19 @@ public function forgotPassword(Request $request){
 
     }
 
+    $veri = User::where('email', $request->all()['email'])->first();
+    if (!$userToken=Auth::fromUser($veri)) {
+        return $this->sendResponse([
+            'success' => false,
+            'message' => 'Invalid credentials'
+        ], 400);
+     }
+
+
     $verify = User::where('email', $request->all()['email'])->exists();
+
+
+
 
     if ($verify) {
         $verify2 =  DB::table('password_resets')->where([
@@ -311,27 +292,26 @@ public function forgotPassword(Request $request){
             'created_at' => Carbon::now()
         ]);
 
+
+
+
         if ($password_reset) {
             Mail::to($request->all()['email'])->send(new ResetPassword($token));
-            return $this->sendResponse([
-                'success' => true,
-                'message' => 'Please check your email for a 4 digit pin.'
-            ], 200);
-
-            // return response()->json([
+            // return $this->sendResponse([
             //     'success' => true,
-            //     'message'=>"Please check your email for a 4 digit pin."
+            //     'message' => 'Please check your email for a 4 digit pin.'
             // ], 200);
+
+
+             return $this-> createNewToken2($userToken, $veri);
+
         }
+
     } else {
         return $this->sendResponse([
             'success' => false,
             'message' => 'This email does not exist.'
         ], 400);
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => "This email does not exist"
-        // ], 200);
 
 
     }
@@ -345,6 +325,8 @@ public function verifyPin(Request $request){
         'email' => $email,  //['required', 'string', 'email', 'max:255'],
         'code' => ['required'],
     ]);
+
+
 
     if ($validator->fails()) {
         return $this->sendResponse([
@@ -366,10 +348,6 @@ public function verifyPin(Request $request){
                 'success' => false,
                 'message' => 'Token Expired'
             ], 400);
-            // return response()->json([
-            //     'success' => false,
-            //     'message' => 'Token Expired'
-            // ], 200);
         }
 
         $delete = DB::table('password_resets')->where([
@@ -381,20 +359,14 @@ public function verifyPin(Request $request){
             'success' => true,
             'message' => 'You can now reset your password'
         ], 200);
-        // return response()->json([
-        //     'success' => true,
-        //     'message'=>"You can now reset your password"
-        // ], 200);
+
+
 
     } else {
         return $this->sendResponse([
             'success' => true,
             'message' => 'Invalid token'
         ], 400);
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => 'Invalid token'
-        // ], 200);
 
     }
 }
@@ -430,10 +402,7 @@ public function resetPassword(Request $request){
         'success' => true,
         'message' => 'Your password has been reset'
     ], 200);
-    // return response()->json([
-    //     'success' => true,
-    //     'message'=>"Your password has been reset"
-    // ], 200);
+
 
 
 }
@@ -475,11 +444,6 @@ public function resetPassword(Request $request){
             'message' => 'Date in the past is not allowed. Kindly select a current date'
         ], 400);
 
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => 'Date in the past is not allowed. Kindly select a current date'
-        // ], 200);
-
     }
 
 
@@ -488,11 +452,6 @@ public function resetPassword(Request $request){
             'success' => false,
             'message' => 'Number of tickets should be equal to guest provided'
         ], 400);
-
-        // return response()->json([
-        //     'success' => false,
-        //     'message' => 'Number of tickets should be equal to guest provided'
-        // ], 200);
 
     }
 
@@ -523,7 +482,7 @@ public function resetPassword(Request $request){
             //'country'=> 'required|string',
             //'city'=> 'required|string',
             'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
-            'reservation_date'=> 'required|date',
+            'reservation_date'=> 'required|date' ,
            // 'numberOfTicket'=>'required|numeric',
             //'numberOfChildren'=>'nullable|numeric',
             //'numberOfAdult'=>'nullable|numeric',
@@ -547,41 +506,50 @@ public function resetPassword(Request $request){
                 'success' => false,
                 'message' => 'Number of tickets should be equal to guest provided'
             ], 400);
-            // return response()->json([
-            //     'success' => false,
-            //     'message' => 'Number of tickets should be equal to guest provided'
-            // ], 200);
 
         }
 
-        // if((carbon::parse($request->reservation_date)) == Carbon::parse($request->reservation_date)){
-        //     return $this->sendError([
-        //         'success'=> false, 'message' => "Sorry you can have already reserved this day."
-        //     ], 400);
-        // }
-
-           //else{         //   20-05-23 <30-04-23 <
-            // $select = DB::table('tickets')->where([
-            //     'reservation_date' => $request->reservation_date,
-            //       ]);
-
             $startDate =carbon::parse($request->reservation_date);
-            $endDate = carbon::parse($request->reservation_date)->addDays(21);
-        if (
-            Ticket::whereNotBetween(DB::raw('DATE(reservation_date)'), [$startDate, $endDate])->get()){
+
+        $data = DB::table('tickets')->select('reservation_date')
+        ->where('id',$id)->first();
+
+        // echo($startDate->diffInDays($data->reservation_date));
+      //  echo(carbon::parse($data->reservation_date)->diffInDays($startDate));
+
+      //check to see if reschedule date is not more than 21days
+        $date = $startDate->diffInDays($data->reservation_date);
+
+            if($date > 21){
+            return $this->sendResponse([
+                            'success' => false,
+                            'message' => 'Sorry you can only reschedule within 21days.',
+                            'last'=>$startDate->addDays(21),
+                             'first'=>$data->reservation_date
+                        ], 400);
+           }
+
+           //check to see if reschedule date is not less than 21days
+           $newdate=carbon::parse($data->reservation_date)->diffInDays($startDate);
+
+          if($newdate > 21){
+            return $this->sendResponse([
+                'success' => false,
+                'message' => 'Sorry you can only reschedule within 21days.',
+                'last'=>$startDate->addDays(21),
+                 'first'=>$data->reservation_date
+            ], 400);
+          }
+
+          //reschedule date cant not be after current date
+           if(Carbon::now()> $startDate){
                 return $this->sendResponse([
                     'success' => false,
-                    'message' => 'Sorry you can only reschedule within 21days.'
+                    'message' => 'Date in the past is not allowed. Kindly select a date within 21 days'
                 ], 400);
-                // return response()->json([
-                //     'success' => false,
-                //     'message' => 'Sorry you can only reschedule within 21days.'
-                // ], 200);
-
             }
 
-
-        else{
+            else{
 
        $reservation= Ticket::findorfail($id);
        $reservation->fullname = $request->fullname;
@@ -627,7 +595,7 @@ public function createNewToken($token){
     return response()->json([
         'access_token' => $token,
         'token_type' => 'bearer',
-        'expires_in' => auth()->factory()->getTTL()* 60,
+        'expires_in' => config('jwt.ttl') * 60,
          'user'=>auth()->user(),
         'message' => "Logged in successfully"
     ]);
@@ -639,7 +607,7 @@ public function createNewToken1($token){
     return response()->json([
         'access_token' => $token,
         'token_type' => 'bearer',
-        'expires_in' => auth()->factory()->getTTL()* 60,
+        'expires_in' => config('jwt.ttl') * 60,
          'user'=>auth()->user(),
         'message'=>'User registered successfully.
         Please check your email for a 4-digit pin to verify your email.'
@@ -647,5 +615,17 @@ public function createNewToken1($token){
 }
 
 
+
+public function createNewToken2($userToken, $veri){
+
+
+    return response()->json([
+        'access_token' => $userToken,
+        'token_type' => 'bearer',
+        'expires_in' => config('jwt.ttl') * 60,
+         'user'=>$veri,
+        'message' => "Please check your email for a 4 digit pin."
+    ]);
+}
 
 }
