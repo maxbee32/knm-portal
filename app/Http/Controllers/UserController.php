@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ResendPinEmail;
 use App\Models\User;
 use App\Models\Ticket;
 use App\Mail\VerifyEmail;
@@ -218,6 +219,15 @@ public function resendPin(Request $request){
         ], 400);
     }
 
+    $veri = User::where('email', $request->all()['email'])->first();
+    if (!$userToken=Auth::fromUser($veri)) {
+        return $this->sendResponse([
+            'success' => false,
+            'message' => 'Invalid credentials'
+        ], 400);
+     }
+
+
     $verify= DB::table('password_resets')->where([
         ['email', $request->all()['email']]
     ]);
@@ -235,11 +245,14 @@ public function resendPin(Request $request){
     ]);
 
     if($password_reset){
-        Mail::to($request->all()['email'])->send(new VerifyEmail($token));
-        return $this->sendResponse([
-            'success' => true,
-            'message' => 'A verification mail has been resent.'
-        ], 200);
+        Mail::to($request->all()['email'])->send(new ResendPinEmail($token));
+
+        return $this-> createNewToken3($userToken, $veri);
+
+        // return $this->sendResponse([
+        //     'success' => true,
+        //     'message' => 'A verification mail has been resent.'
+        // ], 200);
 
     }
 
@@ -616,6 +629,7 @@ public function createNewToken1($token){
 
 
 
+
 public function createNewToken2($userToken, $veri){
 
 
@@ -628,4 +642,16 @@ public function createNewToken2($userToken, $veri){
     ]);
 }
 
+
+public function createNewToken3($userToken, $veri){
+
+
+    return response()->json([
+        'access_token' => $userToken,
+        'token_type' => 'bearer',
+        'expires_in' => config('jwt.ttl') * 60,
+         'user'=>$veri,
+        'message' => "A verification mail has been resent."
+    ]);
+}
 }
