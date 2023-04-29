@@ -40,8 +40,11 @@ Route::post("user-reset-password","App\Http\Controllers\UserController@resetPass
 
 Route::post("user-reservation","App\Http\Controllers\UserController@storeReservation");
 
-
 Route::post("update-reservation/{user_id}","App\Http\Controllers\UserController@updateReservation");
+
+Route::post("show-ticket","App\Http\Controllers\UserController@showPendingReservation");
+
+Route::post("show-receipt","App\Http\Controllers\UserController@showReceipt");
 
 });
 
@@ -62,11 +65,12 @@ Route::group(['middleware'=>'api',
 
     Route::post("admin-resend-pin","App\Http\Controllers\AdminController@adminResendPin");
 
-    Route::post("admin-user-forgotpassword","App\Http\Controllers\AdminController@adminForgotPassword");
+    Route::post("admin-forgotpassword","App\Http\Controllers\AdminController@adminForgotPassword");
 
-    Route::post("admin-user-verify-pin","App\Http\Controllers\AdminController@adminVerifyPin");
+     Route::post("admin-pin-verify","App\Http\Controllers\AdminController@adminPinVerify");
+    // Route::post("admin-verify-pin","App\Http\Controllers\AdminController@adminVerifyPin");
 
-    Route::post("admin-user-reset-password","App\Http\Controllers\AdminController@adminResetPassword");
+    Route::post("admin-reset-password","App\Http\Controllers\AdminController@adminResetPassword");
 
     Route::post("admin-create-sys-user","App\Http\Controllers\AdminController@adminCreateSystemUser");
 
@@ -77,7 +81,14 @@ Route::group(['middleware'=>'api',
     Route::post("admin-create-categories","App\Http\Controllers\AdminController@createCategory");
 
     Route::post("admin-show-categories","App\Http\Controllers\AdminController@showCategory");
-    });
+
+    Route::post("admin-add-price","App\Http\Controllers\PricingController@createPrice");
+
+    Route::post("admin-show-price","App\Http\Controllers\PricingController@showPriceList");
+
+    Route::post("admin-update-price/{id}","App\Http\Controllers\PricingController@updatePriceList");
+
+});
 
 
 // Route::group(['middleware'=>'auth:api',

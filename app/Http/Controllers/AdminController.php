@@ -13,16 +13,17 @@ use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 
 class AdminController extends Controller
 
 
 {
-
 
     public function sendResponse($data, $message, $status = 200){
         $response =[
@@ -32,48 +33,47 @@ class AdminController extends Controller
         return response()->json($response, $status);
      }
 
-
-     public function sendError($errorData, $message, $status =500){
-        $response =[];
-        $response['message'] = $message;
-        if (!empty($errorData)) {
-            $response['data'] = $errorData;
-     }
-     return response()->json($response, $status);
-    }
-
     public function __construct(){
-        $this->middleware('auth:api', ['except'=>['adminSignUp', 'adminLogin','adminLogout','adminverifyEmail','adminresendPin','adminforgotPassword', 'adminverifyPin'
-        ,'adminresetPassword','adminCreateSystemUser', 'adminUpdatePermission', 'adminUpdateSystem',
+        $this->middleware('auth:api', ['except'=>['adminSignUp', 'adminLogin','adminLogout','adminverifyEmail','adminresendPin','adminForgotPassword', 'adminPinVerify'
+        ,'adminResetPassword','adminCreateSystemUser', 'adminUpdatePermission', 'adminUpdateSystem',
         'showCategory','createCategory']]);
     }
 
 
     public function adminSignUp(Request $request){
+
         $validator = Validator::make($request-> all(),[
-            'email' => 'required|string|email:rfc,filter,dns|unique:admins',
-            'password'=> 'required|string|min:6|confirmed'
+            'email' => ['bail','required','string','email:rfc,filter,dns','unique:admins'],
+            'username'=>['required','string','unique:admins'],
+            'password'=> ['required','string',
+            Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
 
         ]);
 
-        if($validator-> fails()){
+        if($validator->stopOnFirstFailure()-> fails()){
+            return $this->sendResponse([
+                'success' => false,
+                'data'=> $validator->errors(),
+                'message' => 'Validation Error'
+            ], 400);
 
-            return $this->sendError($validator->errors(), 'Validation Error', 422);
         }
 
-        $user_status  = Admin:: where("email", $request->email)->first();
 
-            if(!is_null($user_status)){
-                return $this->sendError([], "Whoops! email already registered", 400);
-            }
 
-        $user = Admin:: create(array_merge(
+        $user = Admin::create(array_merge(
                 $validator-> validated(),
                  ['password'=>bcrypt($request->password)]
 
-
-
             ));
+
+            if(!$token = auth()->guard('admin-api')->attempt($validator->validated())){
+                return $this->sendResponse([
+                    'success' => false,
+                    'message' => 'Invalid login credentials'
+                ], 400);
+            }
+
 
             if ($user ){
                 $verify2 = DB::table('password_resets')->where([
@@ -92,89 +92,90 @@ class AdminController extends Controller
                 ]
         );
     }
+      return $this-> createNewToken1($token);
+    // Mail::to($request->email)->send(new VerifyEmail($pin));
 
-    Mail::to($request->email)->send(new VerifyEmail($pin));
-
-      $token = $user->createToken('myapptoken')->plainTextToken;
+    //   $token = $user->createToken('myapptoken')->plainTextToken;
 
 
-          return $this->sendResponse(
-              ['success'=>'true',
-              'message'=>'Admin registered successfully.
-               Please check your email for a 4-digit pin to verify your email.',
-              'token'=>$token
-          ], 201);
 }
 
 
 
     public function adminLogin(Request $request){
         $validator = Validator::make($request->all(), [
-            'email'=> 'required|email:rfc,filter,dns',
-            'password' => 'required|string|min:6',
+            'username'=> ['required','string'],
+            'password' => ['required','string',
+             Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
         ]);
 
-        if($validator->fails()){
-            return $this->sendError($validator->errors(),'Validation Error', 422);
-
+        if($validator->stopOnFirstFailure()-> fails()){
+            return $this->sendResponse([
+                'success' => false,
+                'data'=> $validator->errors(),
+                'message' => 'Validation Error'
+            ], 400);
         }
 
-        if(!$token = auth()->attempt($validator->validated())){
-            return $this->sendError([], "Invalid login credentials", 400);
+        if(!$token = auth()->guard('admin-api')->attempt($validator->validated())){
+            return $this->sendResponse([
+                'success' => false,
+                'data'=> $validator->errors(),
+                'message' => 'Invalid login credentials'
+            ], 400);
+
         }
 
          return $this-> createNewToken($token);
-
-
-
     }
 
-    public function adminverifyEmail(Request $request){
-        $validator = Validator::make($request->all(),[
-            'code'=> 'required',
-            'email' => 'required|email',
-        ]);
 
-        if($validator->fails()){
-            return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
-        }
+    // public function adminverifyEmail(Request $request){
+    //     $validator = Validator::make($request->all(),[
+    //         'code'=> 'required',
+    //         'email' => 'required|email',
+    //     ]);
 
-        $user = Admin::where('email',$request->email);
-        $select = DB::table('password_resets')->where([
-                                    'email' => $request->email,
-                                    'code' => $request->code
-                                      ]);
+    //     if($validator->fails()){
+    //         return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
+    //     }
 
-
-        if($select->get()->isEmpty()){
-            return $this->sendError([
-                'success'=> false, 'message' => "Invalid token"
-            ], 400);
-        }
-
-        $difference = Carbon::now()->diffInSeconds($select->first()->created_at);
-        if($difference > 3600){
-            return $this->sendError([
-                'success'=> false, 'message' => "Token Expired"
-            ], 400);
-        }
+    //     $user = Admin::where('email',$request->email);
+    //     $select = DB::table('password_resets')->where([
+    //                                 'email' => $request->email,
+    //                                 'code' => $request->code
+    //                                   ]);
 
 
-        $select = DB::table('password_resets')
-        ->where('email', $request->email)
-        ->where('code', $request->code)
-        ->delete();
+    //     if($select->get()->isEmpty()){
+    //         return $this->sendError([
+    //             'success'=> false, 'message' => "Invalid token"
+    //         ], 400);
+    //     }
 
-        $user->update([
-            'email_verified_at'=> Carbon::now()
-        ]);
+    //     $difference = Carbon::now()->diffInSeconds($select->first()->created_at);
+    //     if($difference > 3600){
+    //         return $this->sendError([
+    //             'success'=> false, 'message' => "Token Expired"
+    //         ], 400);
+    //     }
 
-        return $this->sendResponse(
-            ['success' => true,
-            'message'=>"Email is verified."], 201);
+
+    //     $select = DB::table('password_resets')
+    //     ->where('email', $request->email)
+    //     ->where('code', $request->code)
+    //     ->delete();
+
+    //     $user->update([
+    //         'email_verified_at'=> Carbon::now()
+    //     ]);
+
+    //     return $this->sendResponse(
+    //         ['success' => true,
+    //         'message'=>"Email is verified."], 201);
 
 
-    }
+    // }
 
 
     public function adminResendPin(Request $request){
@@ -223,9 +224,23 @@ class AdminController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
+            return $this->sendResponse([
+                'success' => false,
+                'data'=> $validator->errors(),
+                'message' => 'Validation Error'
+            ], 400);
 
         }
+
+
+        $veri = Admin::where('email', $request->all()['email'])->first();
+       if (!$userToken=Auth::fromUser($veri)) {
+        return $this->sendResponse([
+            'success' => false,
+            'message' => 'Invalid credentials'
+        ], 400);
+     }
+
 
         $verify = Admin::where('email', $request->all()['email'])->exists();
 
@@ -248,16 +263,17 @@ class AdminController extends Controller
             if ($password_reset) {
                 Mail::to($request->all()['email'])->send(new ResetPassword($token));
 
-                return $this->sendResponse(
-                    [
-                        'success' => true,
-                        'message' => "Please check your email for a 4 digit pin"
-                    ],
-                    200
-                );
+                return $this-> createNewToken2($userToken, $veri);
+                // return $this->sendResponse(
+                //     [
+                //         'success' => true,
+                //         'message' => "Please check your email for a 4 digit pin"
+                //     ],
+                //     200
+                // );
             }
         } else {
-            return $this->sendError(
+            return $this->sendResponse(
                 [
                     'success' => false,
                     'message' => "This email does not exist"
@@ -269,75 +285,93 @@ class AdminController extends Controller
 
 
 
-    public function adminVerifyPin(Request $request)
-    {
+
+
+      public function adminPinVerify(Request $request){
+        $email = auth()->guard('admin-api')->user()->email;
+        // echo($email);
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'email' => $email,  //['required', 'string', 'email', 'max:255'],
             'code' => ['required'],
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
+            return $this->sendResponse([
+                'success' => false,
+                'data'=> $validator->errors(),
+                'message' => 'Validation Error'
+            ], 400);
         }
 
         $check = DB::table('password_resets')->where([
-            ['email', $request->all()['email']],
+            ['email', $email],
             ['code', $request->all()['code']],
         ]);
 
-        if ($check->exists()) {
-            $difference = Carbon::now()->diffInSeconds($check->first()->created_at);
-            if ($difference > 3600) {
-                return $this->sendError(['success' => false, 'message' => "Token Expired"], 400);
-            }
 
-            $delete = DB::table('password_resets')->where([
-                ['email', $request->all()['email']],
-                ['code', $request->all()['code']],
-            ])->delete();
-
-            return $this->sendResponse(
-                [
-                    'success' => true,
-                    'message' => "You can now reset your password"
-                ],
-                200
-                );
-        } else {
-            return $this->sendError(
-                [
-                    'success' => false,
-                    'message' => "Invalid token"
-                ],
-                401
-            );
+    if ($check->exists()) {
+        $difference = Carbon::now()->diffInSeconds($check->first()->created_at);
+        if ($difference > 3600) {
+            return $this->sendResponse([
+                'success' => false,
+                'message' => 'Token Expired'
+            ], 400);
         }
+        $delete = DB::table('password_resets')->where([
+            ['email', $email],
+            ['code', $request->all()['code']],
+        ])->delete();
+
+        return $this->sendResponse([
+            'success' => true,
+            'message' => 'You can now reset your password'
+        ], 200);
+
+
+
+    } else {
+        return $this->sendResponse([
+            'success' => true,
+            'message' => 'Invalid token'
+        ], 400);
+
     }
+
+      }
 
 
     public function adminResetPassword(Request $request)
     {
+        $email = auth()->guard('admin-api')->user()->email;
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
+            'email' => $email,
+            'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+    ]);
 
-        if ($validator->fails()) {
-            return $this->sendError(['success' => false, 'message' => $validator->errors()], 422);
-        }
+    if ($validator->fails()) {
+        return $this->sendResponse([
+            'success' => false,
+            'data'=> $validator->errors(),
+            'message' => 'Validation Error'
+        ], 400);
 
-        $user = Admin::where('email',$request->email);
+
+    }
+
+        $user = Admin::where('email',$email);
         $user->update([
             'password'=>bcrypt($request->password)
         ]);
 
-        $token = $user->first()->createToken('myapptoken')->plainTextToken;
+
 
         return $this->sendResponse(
             [
                 'success' => true,
                 'message' => "Your password has been reset",
-                'token'=>$token
+
             ],
             200
         );
@@ -546,9 +580,33 @@ class AdminController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL()* 60,
-            'user'=>auth()->user()
+            'expires_in' => config('jwt.ttl') * 60,
+            'user'=>auth()->guard('admin-api')->user(),
+            'message'=>'Logged in successfully.'
         ]);
     }
 
+
+    public function createNewToken1($token){
+        return response()->json([
+            // 'success'=>'true',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl') * 60,
+            'user'=>auth()->guard('admin-api')->user(),
+            'message'=>'Admin registered successfully.'
+        ]);
+    }
+
+    public function createNewToken2($userToken, $veri){
+
+
+        return response()->json([
+            'access_token' => $userToken,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl') * 60,
+             'user'=>$veri,
+            'message' => "Please check your email for a 4 digit pin."
+        ]);
+    }
     }

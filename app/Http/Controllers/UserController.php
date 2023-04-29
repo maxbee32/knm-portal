@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ResendPinEmail;
 use App\Models\User;
+use App\Models\Price;
 use App\Models\Ticket;
 use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
+use App\Mail\ResendPinEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Routing\Controller;
@@ -31,19 +32,10 @@ class UserController extends Controller
      }
 
 
-    //  public function sendError($errorData, $message, $status =400){
-    //     $response =[];
-    //     $response['message'] = $message;
-    //     if (!empty($errorData)) {
-    //         $response['data'] = $errorData;
-    //  }
-    //  return response()->json($response, $status);
-    // }
-
 
 public function __construct(){
     $this->middleware('auth:api', ['except'=>['userSignUp', 'userLogin','userLogout','verifyEmail','resendPin','forgotPassword', 'verifyPin','resetPassword',
-                                'storeReservation', 'updateReservation']]);
+                                'storeReservation', 'updateReservation','showPendingReservation','showReceipt']]);
 }
 
 public function userLogin(Request $request){
@@ -94,6 +86,7 @@ public function userSignUp(Request $request){
          'password'=> ['required',
                         'string',
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+            'username'=>'nullable'
     ]);
 
      if($validator->stopOnFirstFailure()-> fails()){
@@ -109,7 +102,7 @@ public function userSignUp(Request $request){
                 ['password'=>bcrypt($request->password)]
             ));
 
-        if(!$token = auth()->attempt($validator->validated())){
+        if(!$token=auth()->attempt($validator->validated())){
             return $this->sendResponse([
                 'success' => false,
                 'message' => 'Invalid login credentials'
@@ -316,8 +309,8 @@ public function forgotPassword(Request $request){
             // ], 200);
 
 
-             return $this-> createNewToken2($userToken, $veri);
 
+             return $this-> createNewToken2($userToken, $veri);
         }
 
     } else {
@@ -428,12 +421,14 @@ public function resetPassword(Request $request){
         'fullname'=> 'required|string|',
         'gender'=> 'required|in:Male,Female',
         'country'=> 'required|string',
-        //'region'=> 'required|string',
+        'digital_address'=> 'nullable|string',
         'city'=> 'required|string',
         'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
         'reservation_date'=> 'required|date',
         'numberOfTicket'=>'required|numeric',
+        'children_visitor_category'=>'nullable|in:Ghanaian Children,Non-Ghanaian Children',
         'numberOfChildren'=>'nullable|numeric',
+        'adult_visitor_category'=>'nullable|in:Ghanaian Adults,Non-Ghanaian Adults',
         'numberOfAdult'=>'nullable|numeric',
         'status'=>'Pending',
         //'ticketId' => 'required|Unique'
@@ -463,11 +458,38 @@ public function resetPassword(Request $request){
     if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
         return $this->sendResponse([
             'success' => false,
-            'message' => 'Number of tickets should be equal to guest provided'
+            'message' => 'Number of tickets should be equal to guest provided.'
         ], 400);
 
     }
 
+    if($request->numberOfChildren != 0 and $request->children_visitor_category == null){
+        return $this->sendResponse([
+            'success' => false,
+            'message' => 'Please select the visitors category for children.'
+        ], 400);
+    }
+
+    if($request->numberOfAdult != 0 and $request->adult_visitor_category == null){
+        return $this->sendResponse([
+            'success' => false,
+            'message' => 'Please select the visitors category for adults.'
+        ], 400);
+    }
+
+    if($request->country=='Ghana' and $request->numberOfAdult != 0 and $request->adult_visitor_category != 'Ghanaian Adults'){
+        return $this->sendResponse([
+            'success' => false,
+            'message' => "Please select the right visitor's category"
+        ], 400);
+    }
+
+    if($request->country=='Ghana' and $request->numberOfChildren != 0 and $request->children_visitor_category != 'Ghanaian Children'){
+        return $this->sendResponse([
+            'success' => false,
+            'message' => "Please select the right visitor's category"
+        ], 400);
+    }
 
 
     $Id =IdGenerator::generate(['table'=>'tickets','field'=>'ticketId','length'=>10,'prefix'=>'TIC-']);
@@ -485,6 +507,9 @@ public function resetPassword(Request $request){
 
 
 }
+
+
+
 
 
     public function updateReservation(Request $request, $id){
@@ -527,8 +552,6 @@ public function resetPassword(Request $request){
         $data = DB::table('tickets')->select('reservation_date')
         ->where('id',$id)->first();
 
-        // echo($startDate->diffInDays($data->reservation_date));
-      //  echo(carbon::parse($data->reservation_date)->diffInDays($startDate));
 
       //check to see if reschedule date is not more than 21days
         $date = $startDate->diffInDays($data->reservation_date);
@@ -537,8 +560,8 @@ public function resetPassword(Request $request){
             return $this->sendResponse([
                             'success' => false,
                             'message' => 'Sorry you can only reschedule within 21days.',
-                            'last'=>$startDate->addDays(21),
-                             'first'=>$data->reservation_date
+                            // 'last'=>$startDate->addDays(21),
+                            //  'first'=>$data->reservation_date
                         ], 400);
            }
 
@@ -549,8 +572,8 @@ public function resetPassword(Request $request){
             return $this->sendResponse([
                 'success' => false,
                 'message' => 'Sorry you can only reschedule within 21days.',
-                'last'=>$startDate->addDays(21),
-                 'first'=>$data->reservation_date
+                // 'last'=>$startDate->addDays(21),
+                //  'first'=>$data->reservation_date
             ], 400);
           }
 
@@ -567,15 +590,9 @@ public function resetPassword(Request $request){
        $reservation= Ticket::findorfail($id);
        $reservation->fullname = $request->fullname;
        $reservation->gender = $request->gender;
-    //    $reservation->country = $request->country;
-    //    $reservation->city = $request->city;
        $reservation->phone_number = $request->phone_number;
        $reservation->reservation_date = $request->reservation_date;
-    //    $reservation->numberOfTicket = $request->numberOfTicket;
-    //    $reservation->numberOfChildren = $request->numberOfChildren;
-    //    $reservation->numberOfAdult = $request->numberOfAdult;
        $reservation->save();
-      //$reservation->update($validator-> validated());
 
       return $this->sendResponse([
         'success' => true,
@@ -600,6 +617,80 @@ public function resetPassword(Request $request){
 
 
 }
+
+
+public function showPendingReservation(){
+    $email = auth()->user()->email;
+    $user =User::join('tickets','users.id' ,'=','tickets.user_id')
+    ->where('tickets.status','pending')
+    ->where('users.email',$email)
+    ->select(array('ticketId','fullname','phone_number','email','numberOfTicket',
+    DB::raw('DATE(reservation_date) AS reservation_date'),
+     'numberOfChildren','numberOfAdult','country',))
+    ->get();
+
+    return $this ->sendResponse([
+        'success' => true,
+         'message' => $user,
+
+       ],200);
+
+
+}
+
+
+ public function showReceipt(){
+    $email = auth()->user()->email;
+    $result =User::join('tickets','users.id' ,'=','tickets.user_id')
+     ->join('prices', function($join){
+        $join->on('tickets.children_visitor_category','=','prices.visitor_category');
+        $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+     })
+    ->where('tickets.status','pending')
+    ->where('users.email',$email)
+
+    ->select(array('ticketId',
+    'fullname',
+    'phone_number',
+    'email',
+    'numberOfTicket',
+    'numberOfChildren',
+    DB::raw("SUM(CASE
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    AS enterance_fee_for_children"),
+    'numberOfAdult',
+    DB::raw("SUM(CASE
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    AS enterance_fee_for_adult"),
+    DB::raw("SUM(CASE
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    AS total_amount"),
+
+    DB::raw('DATE(reservation_date) AS reservation_date'),
+    ))
+   ->groupby('ticketId','fullname',
+   'phone_number',
+   'email',
+   'numberOfTicket',
+   'numberOfChildren',
+   'numberOfAdult',
+   'reservation_date')
+    ->get();
+
+
+    $result;
+
+    return $this ->sendResponse([
+        'success' => true,
+         'message' => $result
+
+       ],200);
+ }
 
 
 public function createNewToken($token){

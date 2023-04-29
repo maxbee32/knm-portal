@@ -41,23 +41,31 @@ return [
             'provider' => 'users',
         ],
 
-        'admins' => [
-            'driver' => 'session',
+
+
+        'users-api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
+
+        'admin-api' => [
+            'driver' => 'jwt',
             'provider' => 'admins',
         ],
-
-        'managers' => [
-            'driver' => 'session',
-            'provider' => 'managers',
-        ],
-
-
+        
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
             'hash' => false,
         ],
+
+        'admins' => [
+            'driver' => 'jwt',
+            'provider' => 'admins',
+             'hash' => false,
+       ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------
@@ -87,10 +95,7 @@ return [
             'model' => App\Models\Admin::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+
     ],
 
     /*
