@@ -220,7 +220,7 @@ class AdminController extends Controller
 
     public function adminForgotPassword(Request $request){
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255','exists:users'],
         ]);
 
         if ($validator->fails()) {
