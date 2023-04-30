@@ -26,7 +26,7 @@ class PricingController extends Controller
      public function createPrice(Request $request){
 
         $validator = Validator::make($request-> all(),[
-            'visitor_category' => ['required','string'],
+            'visitor_category' => ['required','string','unique:prices'],
             'enterance_fee'=>['required','numeric'],
 
         ]);
@@ -87,7 +87,7 @@ class PricingController extends Controller
         ->where('id', $id)
         ->update(['enterance_fee' => $request->enterance_fee]);
 
-        
+
          return $this ->sendResponse([
             'success' => true,
               'message' => 'Price updated successfully.',
