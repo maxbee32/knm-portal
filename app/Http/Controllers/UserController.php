@@ -78,6 +78,7 @@ public function userLogin(Request $request){
      return $this-> createNewToken($token);
 
 
+
 }
 
 public function userSignUp(Request $request){
@@ -142,7 +143,7 @@ public function verifyEmail(Request $request){
         'email' => $email,
     ]);
 
-    if($validator->fails()){
+    if($validator->stopOnFirstFailure()-> fails()){
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -204,7 +205,7 @@ public function resendPin(Request $request){
         'email'=> ['required','email:rfc,filter,dns']
     ]);
 
-    if($validator->fails()){
+    if($validator->stopOnFirstFailure()-> fails()){
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -242,10 +243,7 @@ public function resendPin(Request $request){
 
         return $this-> createNewToken3($userToken, $veri);
 
-        // return $this->sendResponse([
-        //     'success' => true,
-        //     'message' => 'A verification mail has been resent.'
-        // ], 200);
+
 
     }
 
@@ -255,11 +253,11 @@ public function resendPin(Request $request){
 
 public function forgotPassword(Request $request){
     $validator = Validator::make($request->all(), [
-        'email' => ['required', 'string', 'email', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255','exists:users'],
     ]);
 
 
-    if ($validator->fails()) {
+    if ($validator->stopOnFirstFailure()-> fails()) {
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -268,13 +266,23 @@ public function forgotPassword(Request $request){
 
     }
 
-    $veri = User::where('email', $request->all()['email'])->first();
-    if (!$userToken=Auth::fromUser($veri)) {
+     $veri = User::where('email', $request->all()['email'])->first();
+    if(!$userToken = Auth::fromUser($veri)){
         return $this->sendResponse([
             'success' => false,
+            'data'=> $validator->errors(),
             'message' => 'Invalid credentials'
         ], 400);
-     }
+
+    }
+
+    // if (!$userToken=JWTAuth::fromUser($veri)) {
+    //     return $this->sendResponse([
+    //         'success' => false,
+    //         'message' => 'Invalid credentials'
+    //     ], 400);
+    //  }
+     else
 
 
     $verify = User::where('email', $request->all()['email'])->exists();
@@ -303,10 +311,7 @@ public function forgotPassword(Request $request){
 
         if ($password_reset) {
             Mail::to($request->all()['email'])->send(new ResetPassword($token));
-            // return $this->sendResponse([
-            //     'success' => true,
-            //     'message' => 'Please check your email for a 4 digit pin.'
-            // ], 200);
+
 
 
 
@@ -334,7 +339,7 @@ public function verifyPin(Request $request){
 
 
 
-    if ($validator->fails()) {
+    if ($validator->stopOnFirstFailure()-> fails()) {
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -388,7 +393,7 @@ public function resetPassword(Request $request){
     ]);
 
 
-    if ($validator->fails()) {
+    if ($validator->stopOnFirstFailure()-> fails()) {
         return $this->sendResponse([
             'success' => false,
             'data'=> $validator->errors(),
@@ -728,7 +733,7 @@ public function createNewToken2($userToken, $veri){
         'access_token' => $userToken,
         'token_type' => 'bearer',
         'expires_in' => config('jwt.ttl') * 60,
-         'user'=>$veri,
+        'user'=>$veri,
         'message' => "Please check your email for a 4 digit pin."
     ]);
 }
