@@ -105,14 +105,14 @@ public function userSignUp(Request $request){
 
     $ip=request()->ip();
     $currentUserInfo= Location::get($ip);
-   //echo($currentUserInfo->countryName);
+    //echo($currentUserInfo->countryName);
 
         $user = User::create(array_merge(
                 $validator-> validated(),
-                ['country'=>$currentUserInfo->countryName],
-                ['city'=>$currentUserInfo->cityName],
-                ['zipCode'=>$currentUserInfo->zipCode],
-                ['region'=>$currentUserInfo->regionName],
+                // ['country'=>$currentUserInfo->countryName],
+                // ['city'=>$currentUserInfo->cityName],
+                // ['zipCode'=>$currentUserInfo->zipCode],
+                // ['region'=>$currentUserInfo->regionName],
                 ['password'=>bcrypt($request->password)],
 
             ));
