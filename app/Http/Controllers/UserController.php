@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Stevebauman\Location\Facades\Location;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
+
 
 
 class UserController extends Controller
@@ -87,7 +89,9 @@ public function userSignUp(Request $request){
          'password'=> ['required',
                         'string',
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
-            'username'=>'nullable'
+            'username'=>'nullable',
+
+
     ]);
 
      if($validator->stopOnFirstFailure()-> fails()){
@@ -98,9 +102,19 @@ public function userSignUp(Request $request){
         ], 400);
 
     }
+
+    $ip=request()->ip();
+    $currentUserInfo= Location::get($ip);
+   //echo($currentUserInfo->countryName);
+
         $user = User::create(array_merge(
                 $validator-> validated(),
-                ['password'=>bcrypt($request->password)]
+                ['country'=>$currentUserInfo->countryName],
+                ['city'=>$currentUserInfo->cityName],
+                ['zipCode'=>$currentUserInfo->zipCode],
+                ['region'=>$currentUserInfo->regionName],
+                ['password'=>bcrypt($request->password)],
+
             ));
 
         if(!$token=auth()->attempt($validator->validated())){
@@ -552,7 +566,7 @@ public function resetPassword(Request $request){
 
         }
 
-            $startDate =carbon::parse($request->reservation_date);
+        $startDate =carbon::parse($request->reservation_date);
 
         $data = DB::table('tickets')->select('reservation_date')
         ->where('id',$id)->first();
