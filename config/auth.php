@@ -41,8 +41,6 @@ return [
             'provider' => 'users',
         ],
 
-
-
         'users-api' => [
             'driver' => 'jwt',
             'provider' => 'users',
@@ -52,7 +50,11 @@ return [
             'driver' => 'jwt',
             'provider' => 'admins',
         ],
-        
+
+        'manager-api' => [
+            'driver' => 'jwt',
+            'provider' => 'managers',
+        ],
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
@@ -64,6 +66,11 @@ return [
             'provider' => 'admins',
              'hash' => false,
        ],
+       'managers' => [
+        'driver' => 'jwt',
+        'provider' => 'managers',
+         'hash' => false,
+   ],
     ],
 
 
@@ -95,6 +102,11 @@ return [
             'model' => App\Models\Admin::class,
         ],
 
+        'managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
+        ],
+
 
     ],
 
@@ -123,6 +135,13 @@ return [
 
         'admins' => [
             'provider' => 'admins',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'managers' => [
+            'provider' => 'managers',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,

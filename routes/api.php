@@ -74,8 +74,6 @@ Route::group(['middleware'=>'api',
 
     Route::post("admin-create-sys-user","App\Http\Controllers\AdminController@adminCreateSystemUser");
 
-    Route::patch("admin-update-permission","App\Http\Controllers\AdminController@adminUpdatePermission");
-
     Route::put("admin-update-sys-user","App\Http\Controllers\AdminController@adminUpdateSystem");
 
     Route::post("admin-create-categories","App\Http\Controllers\AdminController@createCategory");
@@ -88,8 +86,46 @@ Route::group(['middleware'=>'api',
 
     Route::post("admin-update-price/{id}","App\Http\Controllers\PricingController@updatePriceList");
 
+    Route::post("admin-create-roles","App\Http\Controllers\RoleController@createRole");
+
+    Route::post("admin-update-roles/{id}","App\Http\Controllers\RoleController@updateRole");
+
+    Route::post("admin-create-permission","App\Http\Controllers\PermissionController@createPermission");
+
+    Route::post("admin-update-permission/{id}","App\Http\Controllers\PermissionController@updatePermission");
+
+    Route::post("admin-show-sys-users","App\Http\Controllers\AdminController@showSystemUsers");
+
+    Route::post("admin-delete-sys-user/{id}","App\Http\Controllers\AdminController@deleteSystemUser");
+
+    Route::post("admin-get-users","App\Http\Controllers\DashboardController@getAllUser");
+
+    Route::post("admin-get-ticket","App\Http\Controllers\DashboardController@getNumberOfTickets7");
+
+    Route::post("admin-get-sales","App\Http\Controllers\DashboardController@getTicketAmount7");
+
+    Route::post("admin-get-transaction","App\Http\Controllers\DashboardController@getTransaction7");
+
 });
 
+
+
+
+Route::group(['middleware'=>'api',['role:ticket admin'],
+              'prefix'=>'manager'
+],function($router){
+
+Route::post("ticket-manager-login", "App\Http\Controllers\ManagerController@ticketManagerLogin");
+
+Route::post("ticket-manager-checkuser", "App\Http\Controllers\ManagerController@checkUserTicket");
+
+Route::post("ticket-manager-decline/{id}", "App\Http\Controllers\ManagerController@updateUserTicketDeclined");
+
+Route::post("ticket-manager-approve/{id}", "App\Http\Controllers\ManagerController@updateUserTicketAprroved");
+
+Route::post("ticket-manager-logout", "App\Http\Controllers\ManagerController@ticketManagerLogout");
+
+});
 
 // Route::group(['middleware'=>'auth:api',
 //     'prefix'=>'user'

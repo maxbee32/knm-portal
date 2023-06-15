@@ -183,7 +183,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
         Stevebauman\Location\LocationServiceProvider::class,
-
+        Spatie\Permission\PermissionServiceProvider::class,
 
         /*
          * Package Service Providers...

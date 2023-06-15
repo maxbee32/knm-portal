@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Carbon\Carbon;
 use App\Models\Admin;
 use App\Models\Manager;
 use App\Mail\VerifyEmail;
 use App\Models\Categories;
-use App\Models\Permission;
 use App\Mail\ResetPassword;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-
+use Spatie\Permission\Models\Permission;
 
 class AdminController extends Controller
 
@@ -35,8 +35,8 @@ class AdminController extends Controller
 
     public function __construct(){
         $this->middleware('auth:api', ['except'=>['adminSignUp', 'adminLogin','adminLogout','adminverifyEmail','adminresendPin','adminForgotPassword', 'adminPinVerify'
-        ,'adminResetPassword','adminCreateSystemUser', 'adminUpdatePermission', 'adminUpdateSystem',
-        'showCategory','createCategory']]);
+        ,'adminResetPassword','adminCreateSystemUser', 'adminUpdatePermission', 'adminUpdateSystem','deleteSystemUser',
+        'showCategory','createCategory','showSystemUsers']]);
     }
 
 
@@ -387,42 +387,40 @@ class AdminController extends Controller
 
         }
 
-
-
     }
+    
 
       // create new users and assign role
     public function adminCreateSystemUser(Request $request){
         $validator = Validator::make($request->all(),[
-            'name' => 'required',
-            'email' => 'required|email|',
-            'password' =>'required|confirmed',
-            'roles' => 'required'
+            'username' => 'required',
+            'email' => 'required|email|unique:managers',
+            'roles' => 'required',
+            'permission'=>'required',
+            'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+
         ]);
-      //  $admin= new Manager();
 
+      if($validator->stopOnFirstFailure()-> fails()){
+        return $this->sendResponse([
+            'success' => false,
+            'data'=> $validator->errors(),
+            'message' => 'Validation Error'
+        ], 400);
 
-
-
-        if($validator-> fails()){
-
-            return $this->sendError($validator->errors(), 'Validation Error', 422);
-        }
-
-        $user_status  = Manager::where("email", $request->email)->first();
-
-            if(!is_null($user_status)){
-                return $this->sendError([], "Whoops! email already registered", 400);
-            }
+    }
 
         $user = Manager::create(array_merge(
                 $validator-> validated(),
-                 ['password'=>bcrypt($request->password)]
+                ['password'=>bcrypt($request->password)]
 
             ));
 
-            if($request->roles){
+           if($request->roles){
                 $user->assignRole($request->input('roles'));
+                  $user->givePermissionTo($request->input('permission'));
             }
 
 
@@ -433,9 +431,6 @@ class AdminController extends Controller
                 ],
                 200
             );
-        // }
-
-
 
     }
 
@@ -445,8 +440,10 @@ class AdminController extends Controller
     {
         $this->validate($request, [
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,'.$id,
-            'password' => 'required|confirmed',
+            'email' => 'required|email|unique:managers'.$id,
+            'password'=> ['required',
+                        'string',
+                        Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
             'roles' => 'required'
         ]);
 
@@ -477,22 +474,59 @@ class AdminController extends Controller
     }
 
 
+    public function deleteSystemUser($id)
+    {
+        $user=Manager::find($id);
+        if (is_null($user)){
+            return $this ->sendResponse([
+                'success' => true,
+                 'message' => 'Manager not found.'
 
-    public function adminUpdatePermission(Request $request, Permission $permission){
-        $request->validate(['name'=>'required|string|unique:'.config('permission.table_names.permissions','permissions')
-        .',name,'.$permission->id]);
-        $permission->update(['name'=>$request->name,
-        'guard_name'=>'api']);
+               ],200);
+           }
 
-            return $this->sendResponse(
-                [
+           else {
+             DB::beginTransaction();
+             try{
+                $user->delete();
+                DB::commit();
+                return $this ->sendResponse([
                     'success' => true,
-                    'message' => "Permission updated successfully",
-                ],
-                200
-            );
+                     'message' => 'Account has been permanently removed from the system.'
+
+                   ],200);
+             } catch(Exception $err){
+                DB::rollBack();
+             }
+
+
+        }
+
 
     }
+
+     public function showSystemUsers(){
+        $user =DB::table('managers')
+        ->join('model_has_roles','managers.id', '=' ,'model_has_roles.model_id')
+        ->join('model_has_permissions','managers.id', '=' ,'model_has_permissions.model_id')
+        ->join('roles', function($join){
+            $join->on('model_has_roles.role_id','=','roles.id');
+        })
+         ->join('permissions', function($pjoin){
+            $pjoin->on('model_has_permissions.permission_id','=','permissions.id');
+         })
+         ->select(array('username','email','roles.name as roles','permissions.name as permissions'))
+        ->get();
+
+        return $this ->sendResponse([
+            'success' => true,
+             'message' => $user,
+
+           ],200);
+
+
+    }
+
 
     public function createCategory(Request $request){
        // $image = $request->file('image')->store('public/categories');

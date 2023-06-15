@@ -103,9 +103,9 @@ public function userSignUp(Request $request){
 
     }
 
-    $ip=request()->ip();
-    $currentUserInfo= Location::get($ip);
-    //echo($currentUserInfo->countryName);
+    // $ip=request()->ip();
+    // $currentUserInfo= Location::get($ip);
+    // echo($ip);
 
         $user = User::create(array_merge(
                 $validator-> validated(),
@@ -702,7 +702,7 @@ public function showPendingReservation(){
     ->get();
 
 
-    $result;
+    // $result;
 
     return $this ->sendResponse([
         'success' => true,

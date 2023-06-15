@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('fullname');
             $table->string('phone_number');
-            $table->string('digital_address');
+            $table->string('digital_address')->nullable();
             $table->dateTime('reservation_date');
             $table->string('children_visitor_category')->nullable();
             $table->integer('numberOfChildren')->default(0);

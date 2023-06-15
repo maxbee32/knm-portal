@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class DashboardController extends Controller
+{
+    public function sendResponse($data, $message, $status = 200){
+        $response =[
+            'data' => $data,
+            'message' => $message
+        ];
+        return response()->json($response, $status);
+     }
+
+    public function __construct(){
+        $this->middleware('auth:api', ['except'=>['getAllUser','getNumberOfTickets7','getTicketAmount7',
+        'getTransaction7']]);
+    }
+
+
+    public function getAllUser(){
+        $user =DB::table('users')
+         ->select(array(
+            DB::raw("COUNT(email) As users"),
+         ))
+        ->get();
+
+        return $this ->sendResponse([
+            'success' => true,
+             'message' => $user,
+
+           ],200);
+
+    }
+
+
+    public function getNumberOfTickets7(){
+        $date = \Carbon\Carbon::today()->subDays(7);
+        $date1 = Carbon::today();
+        $user = DB::table('tickets')
+        -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
+        ->select(array(
+            DB::raw("COUNT(ticketId) As tickets"),
+        ))
+        ->get();
+
+        return $this ->sendResponse([
+            'success' => true,
+             'message' => $user,
+
+           ],200);
+    }
+
+
+    public function getTicketAmount7(){
+        $date = \Carbon\Carbon::today()->subDays(7);
+        $date1 = Carbon::today();
+        $user = User::join('tickets','users.id' ,'=','tickets.user_id')
+        ->join('prices', function($join){
+           $join->on('tickets.children_visitor_category','=','prices.visitor_category');
+           $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+        })
+       -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
+       ->select(array(
+       DB::raw("SUM(CASE
+       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
+       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
+       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
+       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+       AS total_amount"),
+       ))
+
+       ->get();
+
+       return $this ->sendResponse([
+        'success' => true,
+         'message' => $user,
+
+       ],200);
+
+    }
+
+
+    public function getTransaction7(){
+        $date = \Carbon\Carbon::today()->subDays(7);
+        $date1 = Carbon::today();
+        $user = User::join('tickets','users.id' ,'=','tickets.user_id')
+        ->join('prices', function($join){
+            $join->on('tickets.children_visitor_category','=','prices.visitor_category');
+            $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+        })
+        -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
+        ->select(array(
+                       'fullname',
+                       DB::raw("SUM(CASE
+                       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren)
+                       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfChildren )
+                       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult )
+                       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult) END)
+                       AS Number_Of_Ticket"),
+                       'ticketId',
+                       DB::raw("DATE(reservation_date) As reservation_date"),
+                       DB::raw("SUM(CASE
+       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
+       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
+       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
+       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+       AS total_amount"),
+       'status'
+
+        ))
+        ->groupby('fullname', 'ticketId','reservation_date','status')
+        ->get();
+
+
+        return $this ->sendResponse([
+            'success' => true,
+             'message' => $user,
+
+           ],200);
+    }
+
+}
