@@ -220,7 +220,7 @@ class AdminController extends Controller
 
     public function adminForgotPassword(Request $request){
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255','exists:users'],
+            'email' => ['required', 'string', 'email', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -387,8 +387,9 @@ class AdminController extends Controller
 
         }
 
+
+
     }
-    
 
       // create new users and assign role
     public function adminCreateSystemUser(Request $request){
@@ -402,6 +403,9 @@ class AdminController extends Controller
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
 
         ]);
+
+
+
 
       if($validator->stopOnFirstFailure()-> fails()){
         return $this->sendResponse([

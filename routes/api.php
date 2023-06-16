@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Contracts\Permission;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +112,7 @@ Route::group(['middleware'=>'api',
 
 
 
+
 Route::group(['middleware'=>'api',['role:ticket admin'],
               'prefix'=>'manager'
 ],function($router){
@@ -124,6 +126,18 @@ Route::post("ticket-manager-decline/{id}", "App\Http\Controllers\ManagerControll
 Route::post("ticket-manager-approve/{id}", "App\Http\Controllers\ManagerController@updateUserTicketAprroved");
 
 Route::post("ticket-manager-logout", "App\Http\Controllers\ManagerController@ticketManagerLogout");
+
+});
+
+
+
+
+Route::group(['middleware'=>'api',
+// ['permission:Create appointment'],
+              'prefix'=>'resmanager'
+],function($router){
+
+Route::post("reservation-manager-login", "App\Http\Controllers\ReservationManagerController@reservationManagerLogin");
 
 });
 

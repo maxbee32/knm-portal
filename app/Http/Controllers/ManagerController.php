@@ -47,6 +47,7 @@ class ManagerController extends Controller
 
         }
 
+
          return $this-> createNewToken($token);
     }
 
@@ -142,6 +143,7 @@ class ManagerController extends Controller
         }
 
     }
+
 
 
     public function createNewToken($token){
