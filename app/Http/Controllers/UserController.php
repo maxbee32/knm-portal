@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Ticket;
+use App\Models\Eticket;
 use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
 use App\Mail\ResendPinEmail;
@@ -510,9 +510,9 @@ public function resetPassword(Request $request){
     }
 
 
-    $Id =IdGenerator::generate(['table'=>'tickets','field'=>'ticketid','length'=>10,'prefix'=>'TIC-']);
+    $Id =IdGenerator::generate(['table'=>'etickets','field'=>'ticketid','length'=>10,'prefix'=>'TIC-']);
 
-     Ticket::create(array_merge(
+     Eticket::create(array_merge(
         ['user_id' => optional(Auth()->user())->id],
         ['numberOfTicket'=>$request->numberOfChildren + $request->numberOfAdult],
         ['ticketid'=>$Id],
@@ -568,7 +568,7 @@ public function resetPassword(Request $request){
 
         $startDate =carbon::parse($request->reservation_date);
 
-        $data = DB::table('tickets')->select('reservation_date')
+        $data = DB::table('etickets')->select('reservation_date')
         ->where('id',$id)->first();
 
 
@@ -606,7 +606,7 @@ public function resetPassword(Request $request){
 
             else{
 
-       $reservation= Ticket::findorfail($id);
+       $reservation= Eticket::findorfail($id);
        $reservation->fullname = $request->fullname;
        $reservation->gender = $request->gender;
        $reservation->phone_number = $request->phone_number;
@@ -640,8 +640,8 @@ public function resetPassword(Request $request){
 
 public function showPendingReservation(){
     $email = auth()->user()->email;
-    $user =User::join('tickets','users.id' ,'=','tickets.user_id')
-    ->where('tickets.status','pending')
+    $user =User::join('etickets','users.id' ,'=','etickets.user_id')
+    ->where('etickets.status','pending')
     ->where('users.email',$email)
     ->select(array('ticketid','fullname','phone_number','email','numberOfTicket',
     DB::raw('DATE(reservation_date) AS reservation_date'),
@@ -660,12 +660,12 @@ public function showPendingReservation(){
 
  public function showReceipt(){
     $email = auth()->user()->email;
-    $result =User::join('tickets','users.id' ,'=','tickets.user_id')
+    $result =User::join('etickets','users.id' ,'=','etickets.user_id')
      ->join('prices', function($join){
-        $join->on('tickets.children_visitor_category','=','prices.visitor_category');
-        $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+        $join->on('etickets.children_visitor_category','=','prices.visitor_category');
+        $join->oron('etickets.adult_visitor_category','=','prices.visitor_category');
      })
-    ->where('tickets.status','pending')
+    ->where('etickets.status','pending')
     ->where('users.email',$email)
 
     ->select(array('ticketid',
