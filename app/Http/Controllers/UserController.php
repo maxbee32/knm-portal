@@ -464,7 +464,7 @@ public function resetPassword(Request $request){
 
     }
 
-    if(Carbon::now()> $request->reservation_date){
+    if(Carbon::now()->format('Y-m-d')> $request->reservation_date){
         return $this->sendResponse([
             'success' => false,
             'message' => 'Date in the past is not allowed. Kindly select a current date'
@@ -518,6 +518,8 @@ public function resetPassword(Request $request){
         ['ticketid'=>$Id],
         $validator-> validated()
     ));
+
+    echo(Carbon::now()->format('Y-m-d'));
     return $this->sendResponse([
         'success' => true,
         'message' => 'Proceed to make payment.'
