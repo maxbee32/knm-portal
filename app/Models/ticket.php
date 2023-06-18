@@ -11,21 +11,6 @@ class Ticket extends Model
 
     protected $guarded=[];
 
-    // protected $fiilable = [
-    //     'user_id',
-    //     'fullname',
-    //     'country',
-    //     'city',
-    //     'phone_number',
-    //     'reservation_date',
-    //     'numberOfChildren',
-    //     'numberOfAdult',
-    //     'numberOfTicket',
-    //     'ticketId',
-    //     'gender',
-    //     'status'
-
-    // ];
 
 
     public function user()
