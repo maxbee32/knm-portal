@@ -444,7 +444,7 @@ public function resetPassword(Request $request){
         'city'=> 'required|string',
         'phone_number'=> 'required|regex:/^(\+\d{1,3}[- ]?)?\d{10}$/|min:10',
         'reservation_date'=> 'required|date',
-        'numberOfTicket'=>'required|numeric',
+        // 'numberOfTicket'=>'numeric',
         'children_visitor_category'=>'nullable|in:Ghanaian Children,Non-Ghanaian Children',
         'numberOfChildren'=>'nullable|numeric',
         'adult_visitor_category'=>'nullable|in:Ghanaian Adults,Non-Ghanaian Adults',
@@ -474,13 +474,13 @@ public function resetPassword(Request $request){
     }
 
 
-    if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
-        return $this->sendResponse([
-            'success' => false,
-            'message' => 'Number of tickets should be equal to guest provided.'
-        ], 400);
+    // if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
+    //     return $this->sendResponse([
+    //         'success' => false,
+    //         'message' => 'Number of tickets should be equal to guest provided.'
+    //     ], 400);
 
-    }
+    // }
 
     if($request->numberOfChildren != 0 and $request->children_visitor_category == null){
         return $this->sendResponse([
@@ -515,6 +515,7 @@ public function resetPassword(Request $request){
 
      Ticket::create(array_merge(
         ['user_id' => optional(Auth()->user())->id],
+        ['numberOfTicket'=>$request->numberOfChildren + $request->numberOfAdult],
         ['ticketId'=>$Id],
         $validator-> validated()
     ));
