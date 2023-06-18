@@ -511,12 +511,12 @@ public function resetPassword(Request $request){
     }
 
 
-    $Id =IdGenerator::generate(['table'=>'tickets','field'=>'ticketId','length'=>10,'prefix'=>'TIC-']);
+    $Id =IdGenerator::generate(['table'=>'tickets','field'=>'ticketid','length'=>10,'prefix'=>'TIC-']);
 
      Ticket::create(array_merge(
         ['user_id' => optional(Auth()->user())->id],
         ['numberOfTicket'=>$request->numberOfChildren + $request->numberOfAdult],
-        ['ticketId'=>$Id],
+        ['ticketid'=>$Id],
         $validator-> validated()
     ));
     return $this->sendResponse([
@@ -644,7 +644,7 @@ public function showPendingReservation(){
     $user =User::join('tickets','users.id' ,'=','tickets.user_id')
     ->where('tickets.status','pending')
     ->where('users.email',$email)
-    ->select(array('ticketId','fullname','phone_number','email','numberOfTicket',
+    ->select(array('ticketid','fullname','phone_number','email','numberOfTicket',
     DB::raw('DATE(reservation_date) AS reservation_date'),
      'numberOfChildren','numberOfAdult','country',))
     ->get();
@@ -669,7 +669,7 @@ public function showPendingReservation(){
     ->where('tickets.status','pending')
     ->where('users.email',$email)
 
-    ->select(array('ticketId',
+    ->select(array('ticketid',
     'fullname',
     'phone_number',
     'email',
@@ -693,7 +693,7 @@ public function showPendingReservation(){
 
     DB::raw('DATE(reservation_date) AS reservation_date'),
     ))
-   ->groupby('ticketId','fullname',
+   ->groupby('ticketid','fullname',
    'phone_number',
    'email',
    'numberOfTicket',
