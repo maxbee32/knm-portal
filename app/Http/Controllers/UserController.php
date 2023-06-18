@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Price;
 use App\Models\Ticket;
 use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
