@@ -519,7 +519,7 @@ public function resetPassword(Request $request){
         $validator-> validated()
     ));
 
-    echo(Carbon::now()->format('Y-m-d'));
+    //echo(Carbon::now()->format('Y-m-d'));
     return $this->sendResponse([
         'success' => true,
         'message' => 'Proceed to make payment.'
