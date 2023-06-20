@@ -514,7 +514,7 @@ public function resetPassword(Request $request){
 
      Eticket::create(array_merge(
         ['user_id' => optional(Auth()->user())->id],
-        ['number_of_ticket'=>$request->numberOfChildren + $request->numberOfAdult],
+        ['number_of_ticket'=>$request->number_of_children + $request->number_of_adult],
         ['ticketid'=>$Id],
         $validator-> validated()
     ));
