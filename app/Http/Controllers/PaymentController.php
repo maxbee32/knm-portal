@@ -61,10 +61,10 @@ public function makePayment(Request $request){
    ->where('users.email',$email)
    ->select(
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category ='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category ='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category ='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category ='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category ='Ghanaian Children' THEN (etickets.numberOfChildren * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category ='Non-Ghanaian Children' THEN (etickets.numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category ='Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category ='Non-Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee) ELSE 0 END)
     AS total_amount")
     )
     // ->get();

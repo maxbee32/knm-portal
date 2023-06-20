@@ -677,19 +677,19 @@ public function showPendingReservation(){
     'numberOfTicket',
     'numberOfChildren',
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (etickets.etickets.numberOfChildren * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (etickets.etickets.numberOfAdult * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_children"),
     'numberOfAdult',
     DB::raw("SUM(CASE
-    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_adult"),
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (etickets.numberOfChildren * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (etickets.numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (etickets.numberOfAdult * enterance_fee) ELSE 0 END)
     AS total_amount"),
 
     DB::raw('DATE(reservation_date) AS reservation_date'),
