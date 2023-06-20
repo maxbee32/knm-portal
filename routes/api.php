@@ -47,6 +47,8 @@ Route::post("show-ticket","App\Http\Controllers\UserController@showPendingReserv
 
 Route::post("show-receipt","App\Http\Controllers\UserController@showReceipt");
 
+Route::post("make-payment","App\Http\Controllers\PaymentController@makePayment");
+
 });
 
 
