@@ -481,34 +481,39 @@ public function resetPassword(Request $request){
 
     // }
 
-    if($request->numberOfChildren != 0 and $request->children_visitor_category == null){
+    if($request->number_Of_children != 0 and $request->children_visitor_category == null){
         return $this->sendResponse([
             'success' => false,
             'message' => 'Please select the visitors category for children.'
         ], 400);
     }
 
-    if($request->numberOfAdult != 0 and $request->adult_visitor_category == null){
+    if($request->number_of_adult != 0 and $request->adult_visitor_category == null){
         return $this->sendResponse([
             'success' => false,
             'message' => 'Please select the visitors category for adults.'
         ], 400);
     }
 
-    if($request->country=='Ghana' and $request->numberOfAdult != 0 and $request->adult_visitor_category != 'Ghanaian Adults'){
+    if($request->country=='Ghana' and $request->number_of_adult != 0 and $request->adult_visitor_category != 'Ghanaian Adults'){
         return $this->sendResponse([
             'success' => false,
             'message' => "Please select the right visitor's category"
         ], 400);
     }
 
-    if($request->country=='Ghana' and $request->numberOfChildren != 0 and $request->children_visitor_category != 'Ghanaian Children'){
+    if($request->country=='Ghana' and $request->number_of_children != 0 and $request->children_visitor_category != 'Ghanaian Children'){
         return $this->sendResponse([
             'success' => false,
             'message' => "Please select the right visitor's category"
         ], 400);
     }
-
+    if($request->number_of_children + $request->number_of_adult == 0){
+        return $this->sendResponse([
+            'success' => false,
+            'message' => "Please enter the number of ticket(s) required for purchasing."
+        ], 400);
+}
 
     $Id =IdGenerator::generate(['table'=>'etickets','field'=>'ticketid','length'=>10,'prefix'=>'TIC-']);
 
@@ -528,9 +533,6 @@ public function resetPassword(Request $request){
 
 
 }
-
-
-
 
 
     public function updateReservation(Request $request, $id){
@@ -560,7 +562,7 @@ public function resetPassword(Request $request){
         }
 
 
-        if($request->numberOfTicket !=$request->numberOfChildren + $request->numberOfAdult ){
+        if($request->number_of_ticket !=$request->number_of_children + $request->number_of_adult ){
             return $this->sendResponse([
                 'success' => false,
                 'message' => 'Number of tickets should be equal to guest provided'
@@ -645,7 +647,7 @@ public function showPendingReservation(){
     $user =User::join('etickets','users.id' ,'=','etickets.user_id')
     ->where('etickets.status','pending')
     ->where('users.email',$email)
-    ->select(array('ticketid','fullname','phone_number','email','numberOfTicket',
+    ->select(array('ticketid','fullname','phone_number','email','number_of_ticket',
     DB::raw('DATE(reservation_date) AS reservation_date'),
      'number_of_children','number_of_adult','country',))
     ->get();
@@ -670,17 +672,17 @@ public function showPendingReservation(){
     ->where('etickets.status','pending')
     ->where('users.email',$email)
 
-    ->select(array('ticketid',
-    'fullname',
-    'phone_number',
-    'email',
-    'number_of_Ticket',
-    'number_of_children',
+    ->select(array('etickets.ticketid',
+    'etickets.fullname',
+    'etickets.phone_number',
+    'users.email',
+    'etickets.number_of_ticket',
+    'etickets.number_of_children',
     DB::raw("SUM(CASE
     WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
     WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_children"),
-    'numberOfAdult',
+    'number_of_adult',
     DB::raw("SUM(CASE
     WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult * enterance_fee)
     WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult * enterance_fee) ELSE 0 END)
@@ -697,7 +699,7 @@ public function showPendingReservation(){
    ->groupby('ticketid','fullname',
    'phone_number',
    'email',
-   'number_of_ticket',
+   'etickets.number_of_ticket',
    'number_of_children',
    'number_of_adult',
    'reservation_date')
