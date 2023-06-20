@@ -16,16 +16,16 @@ return new class extends Migration
         Schema::create('etickets', function (Blueprint $table) {
             $table->id();
             $table->string('ticketid');
-            $table->integer('numberOfTicket');
+            $table->integer('number_of_ticket');
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('fullname');
             $table->string('phone_number');
             $table->string('digital_address')->nullable();
             $table->dateTime('reservation_date');
             $table->string('children_visitor_category')->nullable();
-            $table->integer('numberOfChildren')->default(0);
+            $table->integer('number_of_children')->default(0);
             $table->string('adult_visitor_category')->nullable();
-            $table->integer('numberOfAdult')->default(0);
+            $table->integer('number_of_adult')->default(0);
             $table->string('country');
             $table->string('city');
             $table->string('gender');

@@ -445,9 +445,9 @@ public function resetPassword(Request $request){
         'reservation_date'=> 'required|date',
         // 'numberOfTicket'=>'numeric',
         'children_visitor_category'=>'nullable|in:Ghanaian Children,Non-Ghanaian Children',
-        'numberOfChildren'=>'nullable|numeric',
+        'number_of_children'=>'nullable|numeric',
         'adult_visitor_category'=>'nullable|in:Ghanaian Adults,Non-Ghanaian Adults',
-        'numberOfAdult'=>'nullable|numeric',
+        'number_of_adult'=>'nullable|numeric',
         'status'=>'Pending',
         //'ticketId' => 'required|Unique'
 
@@ -514,7 +514,7 @@ public function resetPassword(Request $request){
 
      Eticket::create(array_merge(
         ['user_id' => optional(Auth()->user())->id],
-        ['numberOfTicket'=>$request->numberOfChildren + $request->numberOfAdult],
+        ['number_of_ticket'=>$request->numberOfChildren + $request->numberOfAdult],
         ['ticketid'=>$Id],
         $validator-> validated()
     ));
@@ -647,7 +647,7 @@ public function showPendingReservation(){
     ->where('users.email',$email)
     ->select(array('ticketid','fullname','phone_number','email','numberOfTicket',
     DB::raw('DATE(reservation_date) AS reservation_date'),
-     'numberOfChildren','numberOfAdult','country',))
+     'number_of_children','number_of_adult','country',))
     ->get();
 
     return $this ->sendResponse([
@@ -674,22 +674,22 @@ public function showPendingReservation(){
     'fullname',
     'phone_number',
     'email',
-    'numberOfTicket',
-    'numberOfChildren',
+    'number_of_Ticket',
+    'number_of_children',
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_children"),
     'numberOfAdult',
     DB::raw("SUM(CASE
-    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_adult"),
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee)
+    WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult * enterance_fee)
+    WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult * enterance_fee) ELSE 0 END)
     AS total_amount"),
 
     DB::raw('DATE(reservation_date) AS reservation_date'),
@@ -697,9 +697,9 @@ public function showPendingReservation(){
    ->groupby('ticketid','fullname',
    'phone_number',
    'email',
-   'numberOfTicket',
-   'numberOfChildren',
-   'numberOfAdult',
+   'number_of_ticket',
+   'number_of_children',
+   'number_of_adult',
    'reservation_date')
     ->get();
 
