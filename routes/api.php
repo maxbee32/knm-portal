@@ -45,7 +45,7 @@ Route::post("update-reservation/{user_id}","App\Http\Controllers\UserController@
 
 Route::post("show-ticket","App\Http\Controllers\UserController@showPendingReservation");
 
-Route::get("show-receipt","App\Http\Controllers\UserController@showReceipt");
+Route::post("show-receipt","App\Http\Controllers\UserController@showReceipt");
 
 Route::post("make-payment","App\Http\Controllers\PaymentController@makePayment");
 
