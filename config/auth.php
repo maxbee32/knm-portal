@@ -36,10 +36,6 @@ return [
     */
 
     'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
 
         'users-api' => [
             'driver' => 'jwt',
@@ -71,6 +67,11 @@ return [
         'provider' => 'managers',
          'hash' => false,
    ],
+   'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
     ],
 
 

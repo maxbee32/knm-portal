@@ -17,11 +17,11 @@ class ReservationManagerController extends Controller
         ];
         return response()->json($response, $status);
      }
-      public function __construct(){
-            $this->middleware('auth:manager-api', ['except'=>['reservationManagerLogin','checkUserTicket', 'updateUserTicketDeclined','updateUserTicketAprroved','ticketManagerLogout']]);
-        //   $this->middleware(['role:reservation admin']);
-           $this->middleware('role:reservation admin', ['only' => ['reservationManagerLogin']]);
-     }
+    //   public function __construct(){
+    //         //  $this->middleware('auth:manager-api', ['except'=>['reservationManagerLogin','checkUserTicket', 'updateUserTicketDeclined','updateUserTicketAprroved','ticketManagerLogout']]);
+    //     //   $this->middleware(['role:reservation admin']);
+    //     // $this->middleware('role:reservation admin', ['except' => ['reservationManagerLogin']]);
+    //  }
 
      //ticket admin login
      public function reservationManagerLogin(Request $request){
@@ -31,7 +31,7 @@ class ReservationManagerController extends Controller
              Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
         ]);
 
-        if($validator->stopOnFirstFailure()-> fails()){
+        if($validator->stopOnFirstFailure()->fails()){
             return $this->sendResponse([
                 'success' => false,
                 'data'=> $validator->errors(),

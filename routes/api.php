@@ -45,7 +45,7 @@ Route::post("update-reservation/{user_id}","App\Http\Controllers\UserController@
 
 Route::post("show-ticket","App\Http\Controllers\UserController@showPendingReservation");
 
-Route::post("show-receipt","App\Http\Controllers\UserController@showReceipt");
+Route::get("show-receipt","App\Http\Controllers\UserController@showReceipt");
 
 Route::post("make-payment","App\Http\Controllers\PaymentController@makePayment");
 
@@ -134,7 +134,7 @@ Route::post("ticket-manager-logout", "App\Http\Controllers\ManagerController@tic
 
 
 
-Route::group(['middleware'=>'api',
+Route::group(['middleware'=>['api','role:reservation admin'],
 // ['permission:Create appointment'],
               'prefix'=>'resmanager'
 ],function($router){

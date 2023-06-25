@@ -46,9 +46,9 @@ class RoleController extends Controller
 
         }
 
-        $role =Role::create(['name' => $request->input('name'), 'guard_name'=>'admin-api']);
+        $role =Role::create(['name' => $request->input('name')]);
         $role->givePermissionTo($request->input('permission'));
-
+        // , 'guard_name'=>'admin-api'
 
         return $this->sendResponse([
             'success' => true,

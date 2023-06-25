@@ -679,8 +679,8 @@ public function showPendingReservation(){
     'etickets.number_of_ticket',
     'etickets.number_of_children',
     DB::raw("SUM(CASE
-    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
-    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee) ELSE 0 END)
+    WHEN children_visitor_category = 'Ghanaian Children' and visitor_category ='Ghanaian Children' THEN (number_of_children * enterance_fee)
+    WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category ='Non-Ghanaian Children' THEN (number_of_children * enterance_fee) ELSE 0 END)
     AS enterance_fee_for_children"),
     'number_of_adult',
     DB::raw("SUM(CASE
@@ -703,7 +703,7 @@ public function showPendingReservation(){
    'number_of_children',
    'number_of_adult',
    'reservation_date')
-    ->get();
+    ->get('');
 
 
     // $result;

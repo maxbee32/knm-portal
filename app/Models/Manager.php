@@ -14,9 +14,11 @@ class Manager extends Authenticatable implements JWTSubject
     use  HasFactory, Notifiable, HasRoles;
 
     // protected $guard_name ='admin-api';
-    // public $guard_name = ['admin-api','manager-api'];
+    //  public $guard_name = ['admin-api','manager-api'];
     // 'admin-api'
 
+    public $guard_name ='api';
+    
     protected $fillable = [
         'email',
         'password',

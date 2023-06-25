@@ -396,11 +396,11 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(),[
             'username' => 'required',
             'email' => 'required|email|unique:managers',
-            'roles' => 'required',
-            'permission'=>'required',
             'password'=> ['required',
                         'string',
                         Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+            'role' => 'required',
+            'permission'=>'required'
 
         ]);
 
@@ -422,9 +422,9 @@ class AdminController extends Controller
 
             ));
 
-           if($request->roles){
-                $user->assignRole($request->input('roles'));
-                  $user->givePermissionTo($request->input('permission'));
+           if($request->role){
+                $user->assignRole($request->input('role'));
+                 $user->givePermissionTo($request->input('permission'));
             }
 
 

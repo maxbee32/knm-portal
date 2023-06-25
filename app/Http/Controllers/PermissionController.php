@@ -37,8 +37,8 @@ class PermissionController extends Controller
 
         }
 
-        Permission::create(['name' => $request->input('name'), 'guard_name'=>'admin-api']);
-
+        Permission::create(['name' => $request->input('name')]);
+        // , 'guard_name'=>'admin-api'
 
         return $this->sendResponse([
             'success' => true,
