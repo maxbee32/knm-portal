@@ -454,7 +454,7 @@ public function resetPassword(Request $request){
 
     ]);
 
-    if($validator-> fails()){
+    if($validator->stopOnFirstFailure()->fails()){
 
         return $this->sendResponse([
             'success' => false,
@@ -552,7 +552,7 @@ public function resetPassword(Request $request){
 
         ]);
 
-        if($validator-> fails()){
+        if($validator->stopOnFirstFailure()->fails()){
             return $this->sendResponse([
                 'success' => false,
                 'data'=> $validator->errors(),
