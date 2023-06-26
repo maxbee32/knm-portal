@@ -42,10 +42,10 @@ class DashboardController extends Controller
     public function getNumberOfTickets7(){
         $date = \Carbon\Carbon::today()->subDays(7);
         $date1 = Carbon::today();
-        $user = DB::table('tickets')
+        $user = DB::table('etickets')
         -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
         ->select(array(
-            DB::raw("COUNT(ticketId) As tickets"),
+            DB::raw("COUNT(ticketid) As tickets"),
         ))
         ->get();
 
@@ -60,10 +60,10 @@ class DashboardController extends Controller
     public function getTicketAmount7(){
         $date = \Carbon\Carbon::today()->subDays(7);
         $date1 = Carbon::today();
-        $user = User::join('tickets','users.id' ,'=','tickets.user_id')
+        $user = User::join('etickets','users.id' ,'=','etickets.user_id')
         ->join('prices', function($join){
-           $join->on('tickets.children_visitor_category','=','prices.visitor_category');
-           $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+           $join->on('etickets.children_visitor_category','=','prices.visitor_category');
+           $join->oron('etickets.adult_visitor_category','=','prices.visitor_category');
         })
        -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
        ->select(array(
@@ -89,10 +89,10 @@ class DashboardController extends Controller
     public function getTransaction7(){
         $date = \Carbon\Carbon::today()->subDays(7);
         $date1 = Carbon::today();
-        $user = User::join('tickets','users.id' ,'=','tickets.user_id')
+        $user = User::join('etickets','users.id' ,'=','etickets.user_id')
         ->join('prices', function($join){
-            $join->on('tickets.children_visitor_category','=','prices.visitor_category');
-            $join->oron('tickets.adult_visitor_category','=','prices.visitor_category');
+            $join->on('etickets.children_visitor_category','=','prices.visitor_category');
+            $join->oron('etickets.adult_visitor_category','=','prices.visitor_category');
         })
         -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
         ->select(array(
@@ -114,7 +114,7 @@ class DashboardController extends Controller
        'status'
 
         ))
-        ->groupby('fullname', 'ticketId','reservation_date','status')
+        ->groupby('fullname', 'ticketid','reservation_date','status')
         ->get();
 
 
