@@ -67,12 +67,12 @@ class DashboardController extends Controller
         })
        -> whereBetween(DB::raw('DATE(reservation_date)'),[$date, $date1 ])
        ->select(array(
-       DB::raw("SUM(CASE
-       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
-       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
-       AS total_amount"),
+        DB::raw("SUM(CASE
+        WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
+        WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee)
+        WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult * enterance_fee)
+        WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult * enterance_fee) ELSE 0 END)
+        AS total_amount"),
        ))
 
        ->get();
@@ -98,18 +98,18 @@ class DashboardController extends Controller
         ->select(array(
                        'fullname',
                        DB::raw("SUM(CASE
-                       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren)
-                       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfChildren )
-                       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult )
-                       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult) END)
+                       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children)
+                       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children )
+                       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult )
+                       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult) END)
                        AS Number_Of_Ticket"),
-                       'ticketId',
+                       'ticketid',
                        DB::raw("DATE(reservation_date) As reservation_date"),
                        DB::raw("SUM(CASE
-       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (numberOfChildren * enterance_fee)
-       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (numberOfAdult * enterance_fee)
-       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (numberOfAdult * enterance_fee)
-       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (numberOfAdult * enterance_fee) ELSE 0 END)
+       WHEN children_visitor_category = 'Ghanaian Children' and visitor_category='Ghanaian Children' THEN (number_of_children * enterance_fee)
+       WHEN children_visitor_category = 'Non-Ghanaian Children' and visitor_category='Non-Ghanaian Children' THEN (number_of_children * enterance_fee)
+       WHEN adult_visitor_category = 'Ghanaian Adults' and visitor_category='Ghanaian Adults' THEN (number_of_adult * enterance_fee)
+       WHEN adult_visitor_category = 'Non-Ghanaian Adults' and visitor_category='Non-Ghanaian Adults' THEN (number_of_adult * enterance_fee) ELSE 0 END)
        AS total_amount"),
        'status'
 
