@@ -109,6 +109,8 @@ Route::group(['middleware'=>'api',
 
     Route::post("admin-get-transaction","App\Http\Controllers\DashboardController@getTransaction7");
 
+    Route::post("admin-all-transaction","App\Http\Controllers\DashboardController@getAllTransaction");
+
 });
 
 
